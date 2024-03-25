@@ -7,7 +7,7 @@ Report link: https://www.overleaf.com/project/65f8cce4799e65445ec51df1
 
 
 # EDGECASES
-- Se um employee fosse um patient, o sistema não está preparado e teria de criar uma nova person entity com repetição de dados unicos (cartao cidadao, etc). 
+- Se um employee fosse um patient, o sistema não está preparado (ou será que está?) e teria de criar uma nova person entity com repetição de dados unicos (cartao cidadao, etc). 
 
 
 
