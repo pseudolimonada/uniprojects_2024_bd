@@ -16,3 +16,19 @@ WARNING:werkzeug: * Debugger is active!
 INFO:werkzeug: * Debugger PIN: 121-353-822
 INFO:werkzeug:127.0.0.1 - - [02/May/2024 19:35:11] "[33mGET /register/unicornio HTTP/1.1[0m" 404 -
 INFO:werkzeug:127.0.0.1 - - [02/May/2024 19:40:41] "[33mPOST /register HTTP/1.1[0m" 404 -
+INFO:werkzeug: * Detected change in '/Users/pedrolima/My Drive/UNI/BD/Projeto/bd2024/main.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 121-353-822
+INFO:werkzeug: * Detected change in '/Users/pedrolima/My Drive/UNI/BD/Projeto/bd2024/main.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 121-353-822
+INFO:werkzeug: * Detected change in '/Users/pedrolima/My Drive/UNI/BD/Projeto/bd2024/main.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 121-353-822
+INFO:werkzeug: * Detected change in '/Users/pedrolima/My Drive/UNI/BD/Projeto/bd2024/main.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 121-353-822

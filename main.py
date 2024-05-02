@@ -12,6 +12,13 @@ StatusCodes = {
     'internal_error': 500
 }
 
+validUsers = [
+    'patient',
+    'assistant',
+    'doctor',
+    'nurse'
+]
+
 ## ACCESS
 
 def db_connection():
@@ -37,6 +44,14 @@ def landing_page():
 
 @app.route('/dbproj/register/<string:user_type>', methods=['POST'])
 def register(user_type):
+    logger.info('POST /register')
+    payload = flask.request.get_json()
+
+    conn = db_connection()
+    cur = conn.cursor()
+
+    logger.debug(f'POST /register - payload: {payload}')
+    
     # Registration logic here
     if user_type == 'patient':
         pass
@@ -48,7 +63,8 @@ def register(user_type):
         pass
     else:
         return """ERROR YOU STICH"""
-    pass
+    
+
 
 # @app.route('/dbproj/user', methods=['PUT'])
 # def authenticate():
