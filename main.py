@@ -1,10 +1,23 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import flask
 import logging
 import psycopg2
 import time
 import datetime
+import os
 
 app = flask.Flask(__name__)
+
+
+DB_USER = os.getenv("DB_USER")
+DB_PASS = os.getenv("DB_PASS")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
+APP_HOST = os.getenv("APP_HOST")
+APP_PORT = os.getenv("APP_PORT")
 
 StatusCodes = {
     'success': 200,
@@ -12,22 +25,22 @@ StatusCodes = {
     'internal_error': 500
 }
 
-validUsers = [
-    'patient',
-    'assistant',
-    'doctor',
-    'nurse'
-]
+UserDetails = {
+    'patient': ['username','password','name','address','cc_number','nif_number','birthdate'],
+    'assistant': ['username','password','name','address','cc_number','nif_number','birthdate',['contract_details','start_date','end_date']],
+    'doctor': ['username','password','name','address','cc_number','nif_number','birthdate',['contract_details','start_date','end_date'],'license','specialization'],
+    'nurse': ['username','password','name','address','cc_number','nif_number','birthdate',['contract_details','start_date','end_date']],
+}
 
 ## ACCESS
 
 def db_connection():
     db = psycopg2.connect(
-        user='dbproj',
-        password='1234',
-        host='127.0.0.1',
-        port='5432',
-        database='dbproj'
+        user=DB_USER,
+        password=DB_PASS,
+        host=DB_HOST,
+        port=DB_PORT,
+        database=DB_NAME
     )
     return db
 
@@ -50,20 +63,33 @@ def register(user_type):
     conn = db_connection()
     cur = conn.cursor()
 
-    logger.debug(f'POST /register - payload: {payload}')
+    logger.debug(f'POST /register - payload received: {payload}')
     
-    # Registration logic here
-    if user_type == 'patient':
-        pass
-    elif user_type == 'assistant':
-        pass
-    elif user_type == 'nurse':
-        pass
-    elif user_type == 'doctor':
-        pass
-    else:
-        return """ERROR YOU STICH"""
+    flag = 0
+    for user in UserDetails.keys():
+        if user == user_type:
+            flag = 1
+            break
+    if flag == 0:
+        response = {'status': StatusCodes['api_error'], 'results': 'you stich... invalid user type'}
+        return response
+
+    missing_args = []
+    for user_detail in UserDetails[user_type]:
+            if type(user_detail) == str:
+                 if user_detail not in payload:
+                      missing_args.append(user_detail)
+            if type(user_detail) == list:
+                 for detail_detail in user_detail:
+                      if detail_detail not in payload:
+                           missing_args.append(detail_detail)
     
+    if len(missing_args) != 0:
+        missing_args_str = ', '.join(missing_args)
+        response = {'status': StatusCodes['api_error'], 'results': f'Missing arguments: {missing_args_str}'}
+        return response
+    
+    return {'status': StatusCodes['success'], 'results': f'Good job fam'}
 
 
 # @app.route('/dbproj/user', methods=['PUT'])
@@ -130,7 +156,5 @@ if __name__ == '__main__':
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    host = '127.0.0.1'
-    port = 8080
-    app.run(host=host, debug=True, threaded=True, port=port)
-    logger.info(f'API v1.0 online: http://{host}:{port}')
+    app.run(host=APP_HOST, debug=True, threaded=True, port=APP_PORT)
+    logger.info(f'API v1.0 online: http://{APP_HOST}:{APP_PORT}')
