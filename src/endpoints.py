@@ -39,15 +39,17 @@ def register(user_type):
     logger.info('POST /register')
     logger.debug(f'POST /register - payload received: {payload}')
 
+    
+
     # check if user type is valid
     if (validator.user_type(user_type) == False):
-        response = {'status': StatusCodes['api_error'], 'errors': 'Invalid user type'}
+        response = {'status': StatusCodes['api_error'], 'results': 'Invalid user type'}
         return flask.jsonify(response)
     
     # check if all required fields are present
     missing_args = validator.user_register_details(user_type, payload)
     if len(missing_args) != 0:
-        response = {'status': StatusCodes['api_error'], 'errors': f'Missing arguments: {', '.join(missing_args)}'}
+        response = {'status': StatusCodes['api_error'], 'results': f'Missing arguments: {', '.join(missing_args)}'}
         return flask.jsonify(response)
     
     # add to register
@@ -108,7 +110,6 @@ def list_top3_patients():
         return {'status': StatusCodes['internal_error'], 'errors': str(e)}
 
     return {'status': StatusCodes['success'], 'results': 'Top 3 patients listed'}
-    pass
 
 # @app.route('/dbproj/daily/<string:date>', methods=['GET'])
 # def daily_summary(date):
