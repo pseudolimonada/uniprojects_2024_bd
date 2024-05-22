@@ -1,11 +1,11 @@
 
-
-import flask
-
-from src.db import db_connection
+from flask import Flask, g, request
+import src.db as db
 from src.utils import config, StatusCodes, UserDetails, logger
 
-app = flask.Flask(__name__)
+app = Flask(__name__)
+
+#todo maybe implement a db connection pool
 
 @app.route('/')
 def landing_page():
@@ -16,16 +16,26 @@ def landing_page():
     <br/>
     """
 
+# Call this function when you want to use the db to get a db connection
+def get_db():
+    if 'db_con' not in g:
+        g.db_con = db.create_connection(config['DB_NAME'], config['DB_HOST'], config['DB_PORT'], config['DB_USER'], config['DB_PASS'])
+    return g.db_con
+
+# This function gets called when the request is done to close db connection
+@app.teardown_appcontext
+def close_db(e=None):
+    db_con = g.pop('db', None)
+
+    if db_con is not None:
+        db_con.close()
+
 @app.route('/dbproj/register/<string:user_type>', methods=['POST'])
 def register(user_type):
     logger.info('POST /register')
-    payload = flask.request.get_json()
-
-    conn = db_connection(config['DB_NAME'], config['DB_HOST'], config['DB_PORT'], config['DB_USER'], config['DB_PASS'])
-    cur = conn.cursor()
+    payload = request.get_json()
 
     logger.debug(f'POST /register - payload received: {payload}')
-    
     
     # check if user_type is a key in UserDetails (patient, assistant, doctor, nurse)
     flag = 0
@@ -55,6 +65,9 @@ def register(user_type):
         response = {'status': StatusCodes['api_error'], 'results': f'Missing arguments: {missing_args_str}'}
         return response
     
+    # add to register
+    db.register_user(get_db(), user_type, payload)
+
     return {'status': StatusCodes['success'], 'results': f'Good job fam'}
 
 
