@@ -1,5 +1,5 @@
 import psycopg2
-from utils import logger, UserDetails
+from src.utils import logger, UserDetails
 
 def create_connection(db_name, db_host, db_port, db_user, db_pass):
     db = psycopg2.connect(

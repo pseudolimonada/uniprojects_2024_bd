@@ -1,4 +1,4 @@
-from utils import StatusCodes, UserDetails, logger
+from src.utils import StatusCodes, UserDetails, logger
 
 # checks if user_type is a key in UserDetails
 def user_type(user_type: str) -> bool:
