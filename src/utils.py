@@ -23,24 +23,22 @@ def setup_logger() -> logging.Logger:
     logger = logging.getLogger('logger')
     logger.setLevel(logging.DEBUG)
 
-    # Create console handler and set level to debug
+    # Create console handler and file handler
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
-
-    # Create file handler and set level to debug
     fh = logging.FileHandler('log_file.log', 'a')
     fh.setLevel(logging.DEBUG)
 
-    # Create formatter
+    # Format handlers
     formatter = logging.Formatter('%(asctime)s [%(levelname)s]:  %(message)s', '%H:%M:%S')
-
-    # Add formatter to ch and fh
     ch.setFormatter(formatter)
     fh.setFormatter(formatter)
 
-    # Add ch and fh to logger
+    # Add handlers
     logger.addHandler(ch)
     logger.addHandler(fh)
+
+    return logger
 
 logger = setup_logger()
 
