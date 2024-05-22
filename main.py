@@ -38,6 +38,7 @@ StatusCodes = {
     'internal_error': 500
 }
 
+# each key points to a value that is a list[str|list[str]] (lista de strings ou listas (elas proprias de strings))
 UserDetails = {
     'patient': ['username','password','name','address','cc_number','nif_number','birthdate'],
     'assistant': ['username','password','name','address','cc_number','nif_number','birthdate',['contract_details','start_date','end_date']],
@@ -78,6 +79,8 @@ def register(user_type):
 
     logger.debug(f'POST /register - payload received: {payload}')
     
+    
+    # check if user_type is a key in UserDetails (patient, assistant, doctor, nurse)
     flag = 0
     for user in UserDetails.keys():
         if user == user_type:
@@ -88,10 +91,13 @@ def register(user_type):
         return response
 
     missing_args = []
+    
+    # check inside UserDetails[user_type] if all the keys are in the payload
     for user_detail in UserDetails[user_type]:
             if type(user_detail) == str:
                  if user_detail not in payload:
                       missing_args.append(user_detail)
+
             if type(user_detail) == list:
                  for detail_detail in user_detail:
                       if detail_detail not in payload:
@@ -157,19 +163,29 @@ def register(user_type):
 #     pass
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='log_file.log', level=logging.DEBUG, force=True, filemode='a')
-    #add formatter with date and time
-
+    # Create logger
     logger = logging.getLogger('logger')
     logger.setLevel(logging.DEBUG)
+
+    # Create console handler and set level to debug
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
 
+    # Create file handler and set level to debug
+    fh = logging.FileHandler('log_file.log', 'a')
+    fh.setLevel(logging.DEBUG)
+
     # Create formatter
     formatter = logging.Formatter('%(asctime)s [%(levelname)s]:  %(message)s', '%H:%M:%S')
+
+    # Add formatter to ch and fh
     ch.setFormatter(formatter)
+    fh.setFormatter(formatter)
+
+    # Add ch and fh to logger
     logger.addHandler(ch)
-    
+    logger.addHandler(fh)
+
     config = load_config()
     app.run(host=config['APP_HOST'], debug=True, threaded=True, port=config['APP_PORT'])
     logger.info(f'API v1.0 online: http://{config['APP_HOST']}:{config['APP_PORT']}')
