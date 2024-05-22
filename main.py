@@ -1,23 +1,36 @@
-from dotenv import load_dotenv
-load_dotenv()
-
-import flask
 import logging
-import psycopg2
 import time
 import datetime
 import os
+import sys 
+
+import flask
+import psycopg2
+from dotenv import dotenv_values
 
 app = flask.Flask(__name__)
 
 
-DB_USER = os.getenv("DB_USER")
-DB_PASS = os.getenv("DB_PASS")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
-APP_HOST = os.getenv("APP_HOST")
-APP_PORT = os.getenv("APP_PORT")
+def load_config() -> dict:
+    try:
+        config = dotenv_values(".env")
+        parsed_config = {
+            'DB_USER': config['DB_USER'],
+            'DB_PASS': config['DB_PASS'],
+            'DB_HOST': config['DB_HOST'],
+            'DB_PORT': config['DB_PORT'],
+            'DB_NAME': config['DB_NAME'],
+            'APP_HOST': config['APP_HOST'],
+            'APP_PORT': config['APP_PORT']
+        }
+        return parsed_config
+    except KeyError as e:
+        logger.error(f"Missing config key: {str(e)}")
+        sys.exit(1)
+    except ValueError as e:
+        logger.error(f"Error converting config value to number: {str(e)}")
+        sys.exit(1)
+
 
 StatusCodes = {
     'success': 200,
@@ -34,13 +47,13 @@ UserDetails = {
 
 ## ACCESS
 
-def db_connection():
+def db_connection(db_name, db_host, db_port, db_user, db_pass):
     db = psycopg2.connect(
-        user=DB_USER,
-        password=DB_PASS,
-        host=DB_HOST,
-        port=DB_PORT,
-        database=DB_NAME
+        user=db_user,
+        password=db_pass,
+        host=db_host,
+        port=db_port,
+        database=db_name
     )
     return db
 
@@ -60,7 +73,7 @@ def register(user_type):
     logger.info('POST /register')
     payload = flask.request.get_json()
 
-    conn = db_connection()
+    conn = db_connection(config['DB_NAME'], config['DB_HOST'], config['DB_PORT'], config['DB_USER'], config['DB_PASS'])
     cur = conn.cursor()
 
     logger.debug(f'POST /register - payload received: {payload}')
@@ -144,17 +157,19 @@ def register(user_type):
 #     pass
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='log_file.log')
+    logging.basicConfig(filename='log_file.log', level=logging.DEBUG, force=True, filemode='a')
+    #add formatter with date and time
+
     logger = logging.getLogger('logger')
     logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
-    ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
 
-    #create formatter
+    # Create formatter
     formatter = logging.Formatter('%(asctime)s [%(levelname)s]:  %(message)s', '%H:%M:%S')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-
-    app.run(host=APP_HOST, debug=True, threaded=True, port=APP_PORT)
-    logger.info(f'API v1.0 online: http://{APP_HOST}:{APP_PORT}')
+    
+    config = load_config()
+    app.run(host=config['APP_HOST'], debug=True, threaded=True, port=config['APP_PORT'])
+    logger.info(f'API v1.0 online: http://{config['APP_HOST']}:{config['APP_PORT']}')

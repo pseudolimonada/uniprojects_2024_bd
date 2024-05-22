@@ -1,0 +1,4 @@
+python-dotenv
+flask
+werkzeug
+psycopg2-binary
