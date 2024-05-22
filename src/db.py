@@ -11,5 +11,18 @@ def create_connection(db_name, db_host, db_port, db_user, db_pass):
     return db
 
 
-def register_user(db_con, payload):
+def register_user(db_con, user_type, payload):
+    cursor = db_con.cursor()
+    try: 
+        cursor.execute(
+            f"INSERT INTO {user_type} ({', '.join(payload.keys())}) VALUES ({', '.join(['%s']*len(payload.keys()))})",
+            tuple(payload.values())
+        )
+        db_con.commit()
+    except Exception as e:
+        print(e)
+        db_con.rollback()
+    cursor.close()
+
+def get_user(db_con, user_id):
     pass

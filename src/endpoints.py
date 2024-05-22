@@ -1,6 +1,7 @@
 
 from flask import Flask, g, request
 import src.db as db
+import src.validator as validator
 from src.utils import config, StatusCodes, UserDetails, logger
 
 app = Flask(__name__)
@@ -37,37 +38,18 @@ def register(user_type):
 
     logger.debug(f'POST /register - payload received: {payload}')
     
-    # check if user_type is a key in UserDetails (patient, assistant, doctor, nurse)
-    flag = 0
-    for user in UserDetails.keys():
-        if user == user_type:
-            flag = 1
-            break
-    if flag == 0:
-        response = {'status': StatusCodes['api_error'], 'results': 'you stich... invalid user type'}
+    if (validator.user_type(user_type) == False):
+        response = {'status': StatusCodes['api_error'], 'results': 'Invalid user type'}
         return response
-
-    missing_args = []
     
-    # check inside UserDetails[user_type] if all the keys are in the payload
-    for user_detail in UserDetails[user_type]:
-            if type(user_detail) == str:
-                 if user_detail not in payload:
-                      missing_args.append(user_detail)
-
-            if type(user_detail) == list:
-                 for detail_detail in user_detail:
-                      if detail_detail not in payload:
-                           missing_args.append(detail_detail)
-    
+    missing_args = validator.user_register_details(user_type, payload)
     if len(missing_args) != 0:
-        missing_args_str = ', '.join(missing_args)
-        response = {'status': StatusCodes['api_error'], 'results': f'Missing arguments: {missing_args_str}'}
+        response = {'status': StatusCodes['api_error'], 'results': f'Missing arguments: {', '.join(missing_args)}'}
         return response
     
     # add to register
     db.register_user(get_db(), user_type, payload)
-
+    
     return {'status': StatusCodes['success'], 'results': f'Good job fam'}
 
 
