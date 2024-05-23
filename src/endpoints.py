@@ -1,15 +1,11 @@
-
-from typing import List, Dict
-
 import flask
 import jwt
+from typing import List, Dict
 
 import src.db as db
 import src.validator as validator
-
 from src.utils import logger, STATUS_CODES, endpoint_error_handler
 from src.api import app, token_required
-from psycopg2 import DatabaseError
 
 #todo: add types to routes
 

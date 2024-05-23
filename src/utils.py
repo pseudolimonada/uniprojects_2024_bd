@@ -1,9 +1,6 @@
-
 import logging
 import sys 
-
 from psycopg2 import DatabaseError
-
 from dotenv import dotenv_values
 from functools import wraps
 
@@ -50,6 +47,8 @@ def setup_logger() -> logging.Logger:
 
 logger = setup_logger()
 
+
+
 def load_config() -> dict:
     try:
         config = dotenv_values(".env")
@@ -73,6 +72,8 @@ def load_config() -> dict:
 
 config = load_config()
 
+
+
 def exception_handler(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -81,7 +82,6 @@ def exception_handler(func):
         except Exception as e:
             raise type(e)(f"An error occurred in function '{func.__name__}': {str(e)}").with_traceback(sys.exc_info()[2])
     return wrapper
-
 
 
 

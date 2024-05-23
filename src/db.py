@@ -1,9 +1,9 @@
-import psycopg2
 import sys
-from psycopg2 import pool
-from src.utils import config, logger
-
+import psycopg2
 from typing import List, Dict
+from psycopg2 import pool
+
+from src.utils import config, logger
 
 # creates a pool of connections to the database (being opened/closed implicitly in all endpoints, setup in api.py)
 db_pool = pool.SimpleConnectionPool(
