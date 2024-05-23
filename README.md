@@ -29,9 +29,9 @@ Report link: https://www.overleaf.com/project/65f8cce4799e65445ec51df1
 # Instalar/Reinstalar a DB
 
 ```
-DROP DATABASE dbproj;
-CREATE USER dbproj PASSWORD "1234";
+DROP DATABASE dbproj WITH(FORCE);
 CREATE DATABASE dbproj;
+CREATE USER dbproj PASSWORD "1234";
 (run schema script from onda)
 
 psql -h localhost -U postgres -d dbproj;
