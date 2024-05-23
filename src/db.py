@@ -1,7 +1,6 @@
 import psycopg2
-import sys
 from psycopg2 import pool
-from src.utils import config, logger
+from src.utils import config
 
 # creates a pool of connections to the database (being opened/closed implicitly in all endpoints, setup in api.py)
 db_pool = pool.SimpleConnectionPool(
@@ -11,26 +10,24 @@ db_pool = pool.SimpleConnectionPool(
     database=config['DB_NAME'])
 
 
-def _execute_query(db_con, query, values=None, fetch_id=False, commit=True):   #careful that values must be a tuple even if it's a single value
+
+def _execute_query(db_con, query, values=None, fetch_id=False):   #careful that values must be a tuple even if it's a single value
     cursor = db_con.cursor()
     if values:
         cursor.execute(query, values)
     else:
         cursor.execute(query)
+    db_con.commit()
     if fetch_id:
         return cursor.fetchone()[0] # might raise errors if empty
-    if commit:
-        db_con.commit()
     cursor.close()
 
-def _build_insert_query(table_name, field_list, fetch=None):
+def _build_insert_query(table_name, field_list):
     columns = ', '.join(field_list)
     values = ', '.join(['%s'] * len(field_list))
     query = f"""
         INSERT INTO {table_name} ({columns})
         VALUES ({values})"""
-    if fetch:
-        query += f" RETURNING {fetch}"
     return query
 
 # PROTOTYPICAL QUERY
@@ -44,53 +41,70 @@ def _build_insert_query(table_name, field_list, fetch=None):
 # _execute_query(db_con, query, values)
 
 def register_user(db_con, user_type, payload):
-    #todo: check if user already exists (nvm the unique constrainti in db fixes)
     person_field_list = ["username", "password", "name", "address", "cc_number", "nif_number", "birth_date"]
 
     # password hashing (could also salt it, hash the salt, salt the hash...)
     hashed_password = hash(payload['password'])
     payload['password'] = hashed_password
 
-    query = _build_insert_query('person',person_field_list, fetch='id')
+    #inserir na tabela person
+    query = _build_insert_query('person', person_field_list)
     values = tuple([payload[field] for field in person_field_list])
-    user_id = _execute_query(db_con, query, values, fetch_id=True, commit=False)
-
-    logger.debug(f"User ID: {user_id}")
+    user_id = _execute_query(db_con, query, values, fetch_id=True)
 
     if user_type == 'patient':
-        logger.info('Registering patient')
         register_patient(db_con, user_id, payload)
     else:
-        logger.info('Registering employee')
         register_employee(db_con, user_type, user_id, payload)
     
-    db_con.commit()
-
     return user_id
 
 
 def register_patient(db_con, user_id, payload):
+    #inserir na tabela patient
     query = _build_insert_query('patient', ['medical_history', 'person_id'])
-    values = (payload['medical_history'], user_id)
-    _execute_query(db_con, query, values, commit=False)
+    values = (user_id, payload['medical_history'])
+    _execute_query(db_con, query, values)
 
 
 def register_employee(db_con, user_type, user_id, payload):
+    #inserir na tabela employee
     query = _build_insert_query('employee', ['contract_details', 'person_id'])
-    values = (payload['contract_details'], user_id)
-    _execute_query(db_con, query, values, commit=False)
+    values = (user_id, payload['contract_details'])
+    _execute_query(db_con, query, values)
 
     if user_type == 'doctor':
         register_doctor(db_con, user_id, payload)
+    elif user_type == 'nurse':
+        register_nurse(db_con, user_id, payload)
+    else:
+        register_assistant(db_con, user_id, payload)
+
+
 
 def register_doctor(db_con, user_id, payload):
     query = """
-    INSERT INTO doctor (license, specialization_id, employee_person_id)
+    INSERT INTO doctor (license, specialization_id, person_employee_id)
     VALUES (%s, (SELECT id FROM specialization WHERE name = %s), %s)
     """
-    values = (payload['license'], payload['specialization_name'], user_id)
+    values = (payload['license'], payload['specialization'], user_id)
+    _execute_query(db_con, query, values)
 
-    _execute_query(db_con, query, values, commit=False)
+def register_nurse(db_con, user_id, payload):
+    query = """
+    INSERT INTO nurse (employee_person_id)
+    VALUES (%s)
+    """
+    values = user_id
+    _execute_query(db_con, query, values)
+
+def register_assistant(db_con, user_id, payload):
+    query = """
+    INSERT INTO assistant (employee_person_id)
+    VALUES (%s)
+    """
+    values = user_id
+    _execute_query(db_con, query, values)
 
 def login_user(db_con, payload):
 
@@ -110,13 +124,13 @@ def login_user(db_con, payload):
 
     # Single query to check for the user_id in the doctor, nurse, assistant, and patient tables efficiently
     query = """
-    SELECT 'doctor' AS user_type FROM doctor WHERE employee_person_id = %s
+    SELECT 'doctor' AS user_type FROM doctor WHERE person_employee_id = %s
     UNION ALL
-    SELECT 'nurse' FROM nurse WHERE employee_person_id = %s
+    SELECT 'nurse' FROM nurse WHERE person_employee_id = %s
     UNION ALL
-    SELECT 'assistant' FROM assistant WHERE employee_person_id = %s
+    SELECT 'assistant' FROM assistant WHERE person_employee_id = %s
     UNION ALL
-    SELECT 'patient' FROM patient WHERE employee_person_id = %s
+    SELECT 'patient' FROM patient WHERE person_employee_id = %s
     """
     values = (login_id, login_id, login_id, login_id)
     cursor.execute(query, values)
@@ -135,9 +149,10 @@ def check_user(db_con, user_id, user_type=None):
         query = """
         SELECT 1 FROM person WHERE id = %s
         """
+        values = (user_id,)
     else:
         query = f"""
-        SELECT 1 FROM {user_type} WHERE employee_person_id = %s
+        SELECT 1 FROM {user_type} WHERE person_employee_id = %s
         """
     values = (user_id,) # tuple with a single element, requirement of the execute method
 
@@ -152,3 +167,7 @@ def check_user(db_con, user_id, user_type=None):
 def get_top3_patients(db_con):
     pass
 
+def schedule_appointment(db_con, user_id, payload):
+    new_appointment_start = pay
+    new_appointment_end = '2024-05-25 11:00:00'
+    pass
