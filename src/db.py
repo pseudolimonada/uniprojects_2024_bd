@@ -3,6 +3,8 @@ import sys
 from psycopg2 import pool
 from src.utils import config, logger
 
+from typing import List, Dict
+
 # creates a pool of connections to the database (being opened/closed implicitly in all endpoints, setup in api.py)
 db_pool = pool.SimpleConnectionPool(
     1, 20,
@@ -53,37 +55,42 @@ def register_user(db_con, user_type, payload):
 
     query = _build_insert_query('person',person_field_list, fetch='id')
     values = tuple([payload[field] for field in person_field_list])
-    user_id = _execute_query(db_con, query, values, fetch_id=True, commit=False)
+
+    user_id = _execute_query(db_con, query, values, fetch_one=True, commit=False)[0] #returns user row as list, [0] for id
 
     logger.debug(f"User ID: {user_id}")
 
     if user_type == 'patient':
         logger.info('Registering patient')
-        register_patient(db_con, user_id, payload)
+        _register_patient(db_con, user_id, payload)
     else:
         logger.info('Registering employee')
-        register_employee(db_con, user_type, user_id, payload)
+        _register_employee(db_con, user_type, user_id, payload)
     
     db_con.commit()
 
     return user_id
 
 
-def register_patient(db_con, user_id, payload):
+def _register_patient(db_con, user_id, payload):
     query = _build_insert_query('patient', ['medical_history', 'person_id'])
     values = (payload['medical_history'], user_id)
     _execute_query(db_con, query, values, commit=False)
 
 
-def register_employee(db_con, user_type, user_id, payload):
+def _register_employee(db_con, user_type, user_id, payload):
     query = _build_insert_query('employee', ['contract_details', 'person_id'])
     values = (payload['contract_details'], user_id)
     _execute_query(db_con, query, values, commit=False)
 
     if user_type == 'doctor':
-        register_doctor(db_con, user_id, payload)
+        _register_doctor(db_con, user_id, payload)
+    elif user_type == 'nurse':
+        _register_nurse(db_con, user_id, payload)
+    elif user_type == 'assistant':
+        _register_assistant(db_con, user_id, payload)
 
-def register_doctor(db_con, user_id, payload):
+def _register_doctor(db_con, user_id, payload):
     query = """
     INSERT INTO doctor (license, specialization_id, employee_person_id)
     VALUES (%s, (SELECT id FROM specialization WHERE name = %s), %s)
@@ -92,8 +99,19 @@ def register_doctor(db_con, user_id, payload):
 
     _execute_query(db_con, query, values, commit=False)
 
-def login_user(db_con, payload):
+def _register_nurse(db_con, user_id, payload):
+    query = _build_insert_query('nurse', ['employee_person_id'])
+    values = (user_id,)
 
+    _execute_query(db_con, query, values, commit=False)
+
+def _register_assistant(db_con, user_id, payload):
+    query = _build_insert_query('assistant', ['certification_details', 'employee_person_id'])
+    values = (payload['certification_details'], user_id)
+
+    _execute_query(db_con, query, values, commit=False)
+
+def login_user(db_con, payload):
     # Query to check for username and password in the person table
     query = """
     SELECT id FROM person WHERE username = %s AND password = %s
@@ -119,7 +137,7 @@ def login_user(db_con, payload):
     SELECT 'patient' FROM patient WHERE employee_person_id = %s
     """
     values = (login_id, login_id, login_id, login_id)
-    cursor.execute(query, values)
+    (query, values)
 
     login_types = [row[0] for row in cursor.fetchall()] # builds list of user roles
 
@@ -149,6 +167,35 @@ def check_user(db_con, user_id, user_type=None):
     if result is None:
         raise ValueError(f'User is not a {user_type}')
 
+
+def schedule_appointment(db_con, payload, patient_id) -> int:
+    pass
+
+def get_user_appointments(db_con, patient_user_id) -> List[Dict]:
+    pass
+
+def schedule_surgery(db_con, payload, hospitalization_id) -> Dict:
+    if hospitalization_id is None:
+        #create hospitalization
+        pass
+    #schedule surgery
+    pass
+
+def get_prescriptions(db_con, patient_id) -> List[Dict]:
+    pass
+
+def add_prescription(db_con, payload) -> int:
+    pass
+
+def execute_payment(db_con, bill_id, payload):
+    pass
+
 def get_top3_patients(db_con):
+    pass
+
+def get_daily_summary(db_con, date):
+    pass
+
+def generate_monthly_report(db_con):
     pass
 

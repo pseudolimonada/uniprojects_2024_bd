@@ -24,8 +24,19 @@ def user_register_details(user_type, payload: dict):
     if len(missing_args) != 0:
         raise ValueError(f"Missing arguments: {', '.join(missing_args)}")
 
-# 
 def user_login_details(payload: dict):
     if 'username' not in payload or 'password' not in payload:
         raise ValueError("Missing username or password")        
 
+def appointment_details(payload: dict):
+    pass
+
+def surgery_details(payload: dict):
+    pass
+
+def prescription_details(payload: dict):
+    pass
+
+
+def payment_details(payload: dict):
+    pass
