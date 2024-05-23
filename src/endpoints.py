@@ -1,5 +1,7 @@
+import datetime
 import flask
 import jwt
+import time
 from typing import List, Dict
 
 import src.db as db
@@ -8,11 +10,6 @@ from src.utils import logger, STATUS_CODES
 from src.api import app, token_required, endpoint_error_handler
 
 #todo: add types to routes
-
-# app is being initialized in src/api.py
-# token_required is a decorator that checks if token is valid, otherwise returns 401 immediately
-# - it also decodes a user id/type (encoded during authentication), and feeds it back to the function as kwargs (keyword parameters)
-# - the "login_id=None, login_types=None" in functions is just a way to tell the function will receive this from the decorator
 
 @app.route('/')
 def landing_page():
@@ -48,9 +45,15 @@ def authenticate_user():
     #authentication logic
     login_id, login_types = db.login_user(flask.g.db_con, payload)
     try:
-        token = jwt.encode({'login_id': login_id, 'login_types': login_types}, app.config['SECRET_KEY'])
+        token_payload = {
+            'login_id': login_id,
+            'login_types': login_types,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+        }
+        token = jwt.encode(token_payload, app.config['SECRET_KEY'])
     except:
         raise ValueError("Error encoding token")
+    
     response = {'status': STATUS_CODES['success'], 'results': token}
 
     #response logging and return
@@ -59,9 +62,9 @@ def authenticate_user():
 
 
 
-@app.route('/dbproj/register/<string:user_type>', methods=['POST'])
+@app.route('/dbproj/register/<user_type>', methods=['POST'])
 @endpoint_error_handler
-def register(user_type, login_id=None, login_types=None):
+def register(user_type):
     """
     Register User. Create a new user of the specified user_type and return the user_id if successful.
     req POST http://localhost:8080/dbproj/register/patient
@@ -362,8 +365,9 @@ def generate_monthly_report(login_id=None, login_types=None):
     logger.info('GET /dbproj/report')
 
     # monthly report logic
-    monthly_report: List[Dict] = db.generate_monthly_report(flask.g.db_con)
-    response = {'status': STATUS_CODES['success'], 'results': monthly_report}
+    #monthly_report: List[Dict] = db.generate_monthly_report(flask.g.db_con)
+    #response = {'status': STATUS_CODES['success'], 'results': monthly_report}
+    response = {'status': STATUS_CODES['success'], 'results': "YA GOT IN FAM"} #debug
 
     # response logging and return
     logger.debug(f'GET /dbproj/report - response: {response}')

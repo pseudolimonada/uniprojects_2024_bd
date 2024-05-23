@@ -29,8 +29,8 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        if 'x-access-tokens' in flask.request.headers:
-            token = flask.request.headers['x-access-tokens']
+        if 'auth-token' in flask.request.headers:
+            token = flask.request.headers['auth-token']
 
         if not token:
             return flask.jsonify({'message': 'Token is missing!'}), 401
@@ -41,9 +41,9 @@ def token_required(f):
             kwargs['login_types'] = data['login_types']
 
         except jwt.ExpiredSignatureError:
-            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': str(e)})
+            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': f"Expired token error: {str(e)}"})
         except jwt.InvalidTokenError:
-            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': str(e)})
+            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': f"Invalid token error: {str(e)}"})
         except Exception as e:
             return flask.jsonify({'status': STATUS_CODES['internal_error'], 'errors': str(e)})
 

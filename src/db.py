@@ -2,6 +2,7 @@ import sys
 import psycopg2
 from psycopg2 import pool
 from typing import List, Dict
+import hashlib
 
 from src.utils import config, logger
 
@@ -50,13 +51,13 @@ def register_user(db_con, user_type, payload):
     person_field_list = ["username", "password", "name", "address", "cc_number", "nif_number", "birth_date"]
 
     # password hashing (could also salt it, hash the salt, salt the hash...)
-    hashed_password = hash(payload['password'])
+    hashed_password = hashlib.sha256(payload['password'].encode()).hexdigest()
     payload['password'] = hashed_password
 
     query = _build_insert_query('person',person_field_list, fetch='id')
     values = tuple([payload[field] for field in person_field_list])
 
-    user_id = _execute_query(db_con, query, values, fetch_one=True, commit=False)[0] #returns user row as list, [0] for id
+    user_id = _execute_query(db_con, query, values, fetch_id=True, commit=False)
 
     logger.debug(f"User ID: {user_id}")
 
@@ -116,7 +117,8 @@ def login_user(db_con, payload):
     query = """
     SELECT id FROM person WHERE username = %s AND password = %s
     """
-    values = (payload['username'], hash(payload['password']))
+    print(payload['username'], payload['password'])
+    values = (payload['username'], hashlib.sha256(payload['password'].encode()).hexdigest())
     cursor = db_con.cursor()
     cursor.execute(query, values)
     result = cursor.fetchone()
@@ -134,10 +136,11 @@ def login_user(db_con, payload):
     UNION ALL
     SELECT 'assistant' FROM assistant WHERE employee_person_id = %s
     UNION ALL
-    SELECT 'patient' FROM patient WHERE employee_person_id = %s
+    SELECT 'patient' FROM patient WHERE person_id = %s
     """
     values = (login_id, login_id, login_id, login_id)
     (query, values)
+    cursor.execute(query, values)
 
     login_types = [row[0] for row in cursor.fetchall()] # builds list of user roles
 
