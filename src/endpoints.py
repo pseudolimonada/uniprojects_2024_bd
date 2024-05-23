@@ -4,8 +4,8 @@ from typing import List, Dict
 
 import src.db as db
 import src.validator as validator
-from src.utils import logger, STATUS_CODES, endpoint_error_handler
-from src.api import app, token_required
+from src.utils import logger, STATUS_CODES
+from src.api import app, token_required, endpoint_error_handler
 
 #todo: add types to routes
 

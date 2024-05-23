@@ -1,6 +1,7 @@
 import flask
 import jwt
 from functools import wraps
+from psycopg2 import DatabaseError
 
 import src.db as db
 from src.db import db_pool
@@ -49,3 +50,19 @@ def token_required(f):
         return f(*args, **kwargs)
 
     return decorated
+
+
+def endpoint_error_handler(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ValueError as e:
+            logger.error(f"Error: {e}")
+            response = {'status': STATUS_CODES['api_error'], 'errors': str(e)}
+            return response
+        except (Exception, DatabaseError) as e:
+            logger.exception(f"Error: {e}")
+            response = {'status': STATUS_CODES['internal_error'],'errors': str(e)}
+            return response
+    return wrapper

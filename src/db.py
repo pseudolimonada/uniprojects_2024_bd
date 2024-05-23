@@ -1,7 +1,7 @@
 import sys
 import psycopg2
-from typing import List, Dict
 from psycopg2 import pool
+from typing import List, Dict
 
 from src.utils import config, logger
 

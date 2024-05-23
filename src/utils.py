@@ -1,8 +1,6 @@
 import logging
 import sys 
-from psycopg2 import DatabaseError
 from dotenv import dotenv_values
-from functools import wraps
 
 
 STATUS_CODES = {
@@ -71,31 +69,3 @@ def load_config() -> dict:
         sys.exit(1)
 
 config = load_config()
-
-
-
-def exception_handler(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            raise type(e)(f"An error occurred in function '{func.__name__}': {str(e)}").with_traceback(sys.exc_info()[2])
-    return wrapper
-
-
-
-def endpoint_error_handler(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except ValueError as e:
-            logger.error(f"Error: {e}")
-            response = {'status': STATUS_CODES['api_error'], 'errors': str(e)}
-            return response
-        except (Exception, DatabaseError) as e:
-            logger.exception(f"Error: {e}")
-            response = {'status': STATUS_CODES['internal_error'],'errors': str(e)}
-            return response
-    return wrapper
