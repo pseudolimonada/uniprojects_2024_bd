@@ -41,9 +41,9 @@ def token_required(f):
             kwargs['login_types'] = data['login_types']
 
         except jwt.ExpiredSignatureError:
-            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': f"Expired token error: {str(e)}"})
+            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': "Expired authorization token"})
         except jwt.InvalidTokenError:
-            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': f"Invalid token error: {str(e)}"})
+            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': "Invalid authorization token"})
         except Exception as e:
             return flask.jsonify({'status': STATUS_CODES['internal_error'], 'errors': str(e)})
 
