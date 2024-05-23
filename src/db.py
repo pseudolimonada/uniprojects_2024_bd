@@ -96,7 +96,7 @@ def login_user(db_con, payload):
     if result is None:
         raise ValueError('Invalid username or password')
 
-    user_id = result[0]
+    login_id = result[0]
 
     # Single query to check for the user_id in the doctor, nurse, assistant, and patient tables efficiently
     query = """
@@ -108,17 +108,17 @@ def login_user(db_con, payload):
     UNION ALL
     SELECT 'patient' FROM patient WHERE person_employee_id = %s
     """
-    values = (user_id, user_id, user_id, user_id)
+    values = (login_id, login_id, login_id, login_id)
     cursor.execute(query, values)
 
-    user_roles = [row[0] for row in cursor.fetchall()] # builds list of user roles
+    login_types = [row[0] for row in cursor.fetchall()] # builds list of user roles
 
     cursor.close()
     
-    if len(user_roles) == 0:
+    if len(login_types) == 0:
         raise ValueError('User has no roles assigned')
 
-    return user_id, user_roles
+    return login_id, login_types
 
 def check_user(db_con, user_id, user_type=None):
     if user_type is None:

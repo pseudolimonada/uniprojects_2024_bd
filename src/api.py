@@ -4,7 +4,7 @@ from functools import wraps
 
 import src.db as db
 from src.db import db_pool
-from src.utils import config
+from src.utils import config, logger, STATUS_CODES
 
 
 app = flask.Flask(__name__)
@@ -36,16 +36,16 @@ def token_required(f):
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            user_id = db.check_user(flask.g.db_con, data['user_id'])
-            user_type = data['user_type']
+            kwargs['login_id'] = db.check_user(flask.g.db_con, data['login_id'])
+            kwargs['login_types'] = data['login_types']
 
         except jwt.ExpiredSignatureError:
-            return flask.jsonify({'message': 'Token has expired!'}), 401
+            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': str(e)})
         except jwt.InvalidTokenError:
-            return flask.jsonify({'message': 'Token is invalid!'}), 401
+            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': str(e)})
         except Exception as e:
-            return flask.jsonify({'message': str(e)}), 500
+            return flask.jsonify({'status': STATUS_CODES['internal_error'], 'errors': str(e)})
 
-        return f(user_id, user_type, *args, **kwargs)
+        return f(*args, **kwargs)
 
     return decorated
