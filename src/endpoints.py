@@ -1,13 +1,13 @@
 
 import flask
-import psycopg2
+import jwt
+
 import src.db as db
 import src.validator as validator
-from src.utils import config, StatusCodes, UserDetails, logger
 
-app = flask.Flask(__name__)
-
-#todo maybe implement a db connection pool
+from src.utils import logger, STATUS_CODES
+from src.api import app, token_required
+from psycopg2 import DatabaseError
 
 @app.route('/')
 def landing_page():
@@ -18,105 +18,115 @@ def landing_page():
     <br/>
     """
 
-# Call this function when you want to use the db to get a db connection
-def get_db():
-    if 'db_con' not in flask.g:
-        flask.g.db_con = db.create_connection(config['DB_NAME'], config['DB_HOST'], config['DB_PORT'], config['DB_USER'], config['DB_PASS'])
-    return flask.g.db_con
-
-# This function gets called when the request is done to close db connection
-@app.teardown_appcontext
-def close_db(e=None):
-    db_con = flask.g.pop('db_con', None)
-
-    if db_con is not None:
-        db_con.close()
-
 @app.route('/dbproj/register/<string:user_type>', methods=['POST'])
 def register(user_type):
     payload = flask.request.get_json()
-
     logger.info('POST /register')
     logger.debug(f'POST /register - payload received: {payload}')
 
-    
-
     # check if user type is valid
-    if (validator.user_type(user_type) == False):
-        response = {'status': StatusCodes['api_error'], 'results': 'Invalid user type'}
-        return flask.jsonify(response)
-    
-    # check if all required fields are present
-    missing_args = validator.user_register_details(user_type, payload)
-    if len(missing_args) != 0:
-        response = {'status': StatusCodes['api_error'], 'results': f'Missing arguments: {', '.join(missing_args)}'}
-        return flask.jsonify(response)
-    
-    # add to register
     try:
-        db.register_user(get_db(), user_type, payload)
-        response = {'status': StatusCodes['success'], 'results': f'Good job fam'}
-    except [Exception,psycopg2.DatabaseError] as e:
+        validator.user_type(user_type) # check if user_type is valid
+        validator.user_register_details(user_type, payload) # check if payload has all the required fields
+
+        user_id = db.register_user(flask.g.db_con, user_type, payload)
+        response = {'status': STATUS_CODES['success'], 'results': f'id {user_id} registered successfully'}
+
+    except ValueError as e:
         logger.error(f"Error: {e}")
-        response = {'status': StatusCodes['internal_error'], 'errors': str(e)}
+        response = {'status': STATUS_CODES['api_error'], 'errors': str(e)}
+
+    except (Exception, DatabaseError) as e:
+        logger.error(f"Error: {e}")
+        response = {'status': STATUS_CODES['internal_error'],'errors': str(e)}
     
     logger.debug(f'POST /register - response: {response}')
     return flask.jsonify(response)
 
 
-# @app.route('/dbproj/user', methods=['PUT'])
-# def authenticate():
-#     # Authentication logic here
-#     pass
+@app.route('/dbproj/user', methods=['PUT'])
+def authenticate_user():
+    # authentication logic here
+    payload = flask.request.get_json()
+    logger.info('POST /register')
+    logger.debug(f'POST /register - payload received: {payload}')
 
-# @app.route('/dbproj/appointment', methods=['POST'])
-# def schedule_appointment():
-    # Appointment scheduling logic here
-#     pass
+    try: 
+        validator.user_login_details(payload) # check if payload has username and password
 
-# @app.route('/dbproj/appointments/<int:patient_user_id>', methods=['GET'])
-# def see_appointments(patient_user_id):
-#     # Fetch appointments logic here
-#     pass
+        user_id, user_types = db.login_user(flask.g.db_con, payload)
+        token = jwt.encode({'user_id': user_id, 'user_types': user_types}, app.config['SECRET_KEY'])
+        response = {'status': STATUS_CODES['success'],'results': f'auth token {token}'}
 
-# @app.route('/dbproj/surgery', methods=['POST'])
-# @app.route('/surgery/<int:hospitalization_id>', methods=['POST'])
-# def schedule_surgery(hospitalization_id=None):
-#     # Surgery scheduling logic here
-#     pass
+    except ValueError as e:
+        response = {'status': STATUS_CODES['api_error'], 'errors': str(e)}
+    except (Exception, DatabaseError) as e:
+        logger.error(f"Error: {e}")
+        response = {'status': STATUS_CODES['internal_error'], 'errors': str(e)}
 
-# @app.route('/dbproj/prescriptions/<int:person_id>', methods=['GET'])
-# def get_prescriptions(person_id):
-#     # Fetch prescriptions logic here
-#     pass
+    logger.debug(f'POST /register - response: {response}')
+    return flask.jsonify(response)
 
-# @app.route('/dbproj/prescription/', methods=['POST'])
-# def add_prescriptions():
-#     # Add prescriptions logic here
-#     pass
 
-# @app.route('/dbproj/bills/<int:bill_id>', methods=['POST'])
-# def execute_payment(bill_id):
-#     # Payment execution logic here
-#     pass
+@app.route('/dbproj/appointment', methods=['POST'])
+@token_required
+def schedule_appointment():
+    # appointment scheduling logic here
+    pass
+
+
+@app.route('/dbproj/appointments/<patient_user_id>', methods=['GET'])
+@token_required
+def see_appointments(patient_user_id):
+    # logic to list all appointments here
+    pass
+
+
+@app.route('/dbproj/surgery', methods=['POST'])
+@app.route('/dbproj/surgery/<hospitalization_id>', methods=['POST'])
+@token_required
+def schedule_surgery(hospitalization_id=None):
+    # surgery scheduling logic here
+    pass
+
+
+@app.route('/dbproj/prescriptions/<person_id>', methods=['GET'])
+@token_required
+def get_prescriptions(person_id):
+    # logic to get prescriptions here
+    pass
+
+
+@app.route('/dbproj/prescription/', methods=['POST'])
+@token_required
+def add_prescriptions():
+    # logic to add prescriptions here
+    pass
+
+
+@app.route('/dbproj/bills/<bill_id>', methods=['POST'])
+@token_required
+def execute_payment(bill_id):
+    # payment execution logic here
+    pass
+
 
 @app.route('/dbproj/top3', methods=['GET'])
+@token_required
 def list_top3_patients():
-    logger.info('GET /top3')
-    try:
-        db.get_top3_patients(get_db())
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        return {'status': StatusCodes['internal_error'], 'errors': str(e)}
+    # logic to list top 3 patients here
+    pass
 
-    return {'status': StatusCodes['success'], 'results': 'Top 3 patients listed'}
 
-# @app.route('/dbproj/daily/<string:date>', methods=['GET'])
-# def daily_summary(date):
-#     # Daily summary logic here
-#     pass
+@app.route('/dbproj/daily/<date>', methods=['GET'])
+@token_required
+def daily_summary(date):
+    # logic to get daily summary here
+    pass
 
-# @app.route('/dbproj/report', methods=['GET'])
-# def generate_monthly_report():
-#     # Monthly report generation logic here
-#     pass
+
+@app.route('/dbproj/report', methods=['GET'])
+@token_required
+def generate_monthly_report():
+    # logic to generate monthly report here
+    pass

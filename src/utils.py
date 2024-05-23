@@ -3,20 +3,28 @@ import logging
 import sys 
 
 from dotenv import dotenv_values
+from functools import wraps
+from flask import request, jsonify
+import jwt
 
-StatusCodes = {
+
+STATUS_CODES = {
     'success': 200,
     'api_error': 400,
     'internal_error': 500
 }
 
-# each key points to a value that is a list[str|list[str]] (lista de strings ou listas (elas proprias de strings))
-UserDetails = {
-    'patient': ['username','password','name','address','cc_number','nif_number','birthdate'],
-    'assistant': ['username','password','name','address','cc_number','nif_number','birthdate',['contract_details','start_date','end_date']],
-    'doctor': ['username','password','name','address','cc_number','nif_number','birthdate',['contract_details','start_date','end_date'],'license','specialization'],
-    'nurse': ['username','password','name','address','cc_number','nif_number','birthdate',['contract_details','start_date','end_date']],
+USER_DETAILS = ['username','password','name','address','cc_number','nif_number','birthdate']
+
+OTHER_USER_DETAILS = {
+    'patient': ['medical_record'],
+    'assistant': ['contract'],
+    'doctor': ['contract','license','specialization'],
+    'nurse': ['contract'],
 }
+
+CONTRACT_DETAILS = ['contract_details', 'start_date', 'end_date']
+
 
 def setup_logger() -> logging.Logger:
     # Create logger
@@ -52,7 +60,8 @@ def load_config() -> dict:
             'DB_PORT': config['DB_PORT'],
             'DB_NAME': config['DB_NAME'],
             'APP_HOST': config['APP_HOST'],
-            'APP_PORT': config['APP_PORT']
+            'APP_PORT': config['APP_PORT'],
+            'APP_SECRET_KEY': config['APP_SECRET_KEY']
         }
         return parsed_config
     except KeyError as e:
