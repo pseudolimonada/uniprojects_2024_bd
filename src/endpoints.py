@@ -48,7 +48,7 @@ def authenticate_user():
         token_payload = {
             'login_id': login_id,
             'login_types': login_types,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=30)
         }
         token = jwt.encode(token_payload, app.config['SECRET_KEY'])
     except:
