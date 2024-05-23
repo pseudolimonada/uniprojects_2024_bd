@@ -3,6 +3,7 @@ import logging
 import sys 
 
 from dotenv import dotenv_values
+from functools import wraps
 
 
 STATUS_CODES = {
@@ -16,7 +17,7 @@ USER_DETAILS = ['username','password','name','address','cc_number','nif_number',
 OTHER_USER_DETAILS = {
     'patient': ['medical_record'],
     'assistant': ['contract'],
-    'doctor': ['contract','license','specialization'],
+    'doctor': ['contract_details','license','specialization_name'],
     'nurse': ['contract'],
 }
 
@@ -69,3 +70,12 @@ def load_config() -> dict:
         sys.exit(1)
 
 config = load_config()
+
+def exception_handler(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            raise type(e)(f"An error occurred in function '{func.__name__}': {str(e)}").with_traceback(sys.exc_info()[2])
+    return wrapper
