@@ -25,3 +25,75 @@ Report link: https://www.overleaf.com/project/65f8cce4799e65445ec51df1
 - só o assistant gere tudo o que é appointment surgery e hospitalization
 
 
+
+# Instalar/Reinstalar a DB
+
+```
+DROP DATABASE dbproj WITH(FORCE);
+CREATE DATABASE dbproj;
+CREATE USER dbproj PASSWORD "1234";
+(run schema script from onda)
+
+psql -h localhost -U postgres -d dbproj;
+GRANT ALL ON SCHEMA public to dbproj;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO dbproj;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO dbproj;
+```
+
+
+# Inserir especializações na DB
+
+```
+INSERT INTO specialization (name)
+VALUES
+    ('Internal Medicine'),
+    ('Surgery'),
+    ('Pediatrics'),
+    ('Dermatology'),
+    ('Obstetrics and Gynecology'),
+    ('Cardiology'),
+    ('Gastroenterology'),
+    ('Pulmonology'),
+    ('Orthopedic Surgery'),
+    ('Neurosurgery'),
+    ('Spinal Neurosurgery');
+	
+INSERT INTO specialization_specialization (specialization_id, specialization_id1)
+VALUES
+    (6, 1), -- Cardiology > Internal Medicine
+    (7, 1), -- Gastroenterology > Internal Medicine
+    (8, 1), -- Pulmonology > Internal Medicine
+    (10, 2), -- Neurosurgery > Surgery
+	(11,10); -- Spinal Neurosurgery > Neurosurgery
+
+
+INSERT INTO side_effect (name)
+VALUES
+    ('Nausea'),
+    ('Headache'),
+    ('Dizziness'),
+    ('Dry mouth'),
+    ('Sleepiness'),
+    ('Constipation');
+
+INSERT INTO medication (name)
+VALUES
+    ('Aspirin'),
+    ('Ibuprofen'),
+    ('Acetaminophen'),
+    ('Amoxicillin'),
+    ('Metformin'),
+    ('Lisinopril');
+
+INSERT INTO severity (level, medication_id, side_effect_id)
+VALUES
+    (2, 1, 1),  -- Aspirin causing Nausea with severity level 2
+    (3, 1, 2),  -- Aspirin causing Headache with severity level 3
+    (1, 2, 1),  -- Ibuprofen causing Nausea with severity level 1
+    (4, 2, 3),  -- Ibuprofen causing Dizziness with severity level 4
+    (2, 3, 4),  -- Acetaminophen causing Dry mouth with severity level 2
+    (3, 4, 5),  -- Amoxicillin causing Sleepiness with severity level 3
+    (1, 5, 6),  -- Metformin causing Constipation with severity level 1
+    (2, 6, 1),  -- Lisinopril causing Nausea with severity level 2
+    (3, 6, 2);  -- Lisinopril causing Headache with severity level 3
+```
