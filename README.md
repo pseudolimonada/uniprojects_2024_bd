@@ -97,3 +97,4 @@ VALUES
     (2, 6, 1),  -- Lisinopril causing Nausea with severity level 2
     (3, 6, 2);  -- Lisinopril causing Headache with severity level 3
 ```
+
