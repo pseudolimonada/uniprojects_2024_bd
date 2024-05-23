@@ -1,7 +1,6 @@
 import flask
 import jwt
 from functools import wraps
-from jwt import ExpiredSignatureError, InvalidTokenError
 
 import src.db as db
 from src.db import db_pool

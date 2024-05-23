@@ -3,9 +3,6 @@ import logging
 import sys 
 
 from dotenv import dotenv_values
-from functools import wraps
-from flask import request, jsonify
-import jwt
 
 
 STATUS_CODES = {

@@ -2,15 +2,12 @@ import psycopg2
 from psycopg2 import pool
 from src.utils import config
 
-# creates a pool of connections to the database
+# creates a pool of connections to the database (being opened/closed implicitly in all endpoints, setup in api.py)
 db_pool = pool.SimpleConnectionPool(
     1, 20,
     user=config['DB_USER'], password=config['DB_PASS'],
     host=config['DB_HOST'], port=config['DB_PORT'],
     database=config['DB_NAME'])
-
-
-# INNER FUNCTIONS
 
 
 def _execute_query(db_con, query, values=None, fetch_id=False):   #careful that values must be a tuple even if it's a single value
@@ -31,7 +28,6 @@ def _build_insert_query(table_name, field_list):
         INSERT INTO {table_name} ({columns})
         VALUES ({values})"""
     return query
-
 
 # PROTOTYPICAL QUERY
 # query = """"
