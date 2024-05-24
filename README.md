@@ -98,3 +98,41 @@ VALUES
     (3, 6, 2);  -- Lisinopril causing Headache with severity level 3
 ```
 
+# TRIGGERS
+
+# Adicionar um trigger à DB
+1. abrir o PgAdmin
+2. clicar em event (tabelas do lado esquerdo)
+3. no canto superior esquerdo clicar no í cone que diz "all rows" quando metes o rato por cima
+4. Ctrl+C, Ctrl+V pra dentro do terminal
+5. executar
+
+# Criação de bill por cada novo evento
+```
+CREATE SEQUENCE bill_id_sequence
+START WITH 1
+INCREMENT BY 1
+NO CYCLE;
+
+CREATE OR REPLACE FUNCTION _create_bill()
+RETURNS trigger AS $$
+BEGIN
+    DECLARE
+        bill_amount NUMERIC := 50.00;
+    BEGIN
+        INSERT INTO bills (id, amount, status, event_id)
+        VALUES (NEXTVAL('bill_id_sequence'), bill_amount, False, new.event_id);
+
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE NOTICE 'Error creating bill: %', SQLERRM;
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER create_bill_trigger
+AFTER INSERT ON event
+FOR EACH STATEMENT
+EXECUTE FUNCTION _create_bill();
+```
