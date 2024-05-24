@@ -44,19 +44,19 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO dbproj;
 # Inserir especializações na DB
 
 ```
-INSERT INTO specialization (id, name)
+INSERT INTO specialization (name)
 VALUES
-    (1, 'Internal Medicine'),
-    (2, 'Surgery'),
-    (3, 'Pediatrics'),
-    (4, 'Dermatology'),
-    (5, 'Obstetrics and Gynecology'),
-    (6, 'Cardiology'),
-    (7, 'Gastroenterology'),
-    (8, 'Pulmonology'),
-    (9, 'Orthopedic Surgery'),
-    (10, 'Neurosurgery'),
-	(11, 'Spinal Neurosurgery');
+    ('Internal Medicine'),
+    ('Surgery'),
+    ('Pediatrics'),
+    ('Dermatology'),
+    ('Obstetrics and Gynecology'),
+    ('Cardiology'),
+    ('Gastroenterology'),
+    ('Pulmonology'),
+    ('Orthopedic Surgery'),
+    ('Neurosurgery'),
+    ('Spinal Neurosurgery');
 	
 INSERT INTO specialization_specialization (specialization_id, specialization_id1)
 VALUES
@@ -65,4 +65,73 @@ VALUES
     (8, 1), -- Pulmonology > Internal Medicine
     (10, 2), -- Neurosurgery > Surgery
 	(11,10); -- Spinal Neurosurgery > Neurosurgery
+
+
+INSERT INTO side_effect (name)
+VALUES
+    ('Nausea'),
+    ('Headache'),
+    ('Dizziness'),
+    ('Dry mouth'),
+    ('Sleepiness'),
+    ('Constipation');
+
+INSERT INTO medication (name)
+VALUES
+    ('Aspirin'),
+    ('Ibuprofen'),
+    ('Acetaminophen'),
+    ('Amoxicillin'),
+    ('Metformin'),
+    ('Lisinopril');
+
+INSERT INTO severity (level, medication_id, side_effect_id)
+VALUES
+    (2, 1, 1),  -- Aspirin causing Nausea with severity level 2
+    (3, 1, 2),  -- Aspirin causing Headache with severity level 3
+    (1, 2, 1),  -- Ibuprofen causing Nausea with severity level 1
+    (4, 2, 3),  -- Ibuprofen causing Dizziness with severity level 4
+    (2, 3, 4),  -- Acetaminophen causing Dry mouth with severity level 2
+    (3, 4, 5),  -- Amoxicillin causing Sleepiness with severity level 3
+    (1, 5, 6),  -- Metformin causing Constipation with severity level 1
+    (2, 6, 1),  -- Lisinopril causing Nausea with severity level 2
+    (3, 6, 2);  -- Lisinopril causing Headache with severity level 3
+
 ```
+#TRIGGERS
+#como adicionar:
+#	abrir o PgAdmin
+#	clicar em event (tabelas do lado esquerdo)
+#	no canto superior esquerdo clicar no í cone que diz "all rows" quando metes o rato por cima
+#	Ctrl+C, Ctrl+V pra dentro do terminal
+# 	executar
+
+
+#este cria uma nova bill por cada novo evento
+
+CREATE SEQUENCE bill_id_sequence
+START WITH 1
+INCREMENT BY 1
+NO CYCLE;
+
+CREATE OR REPLACE FUNCTION _create_bill()
+RETURNS trigger AS $$
+BEGIN
+    DECLARE
+        bill_amount NUMERIC := 50.00;
+    BEGIN
+        INSERT INTO bills (id, amount, status, event_id)
+        VALUES (NEXTVAL('bill_id_sequence'), bill_amount, False, new.event_id);
+
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE NOTICE 'Error creating bill: %', SQLERRM;
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER create_bill_trigger
+AFTER INSERT ON event
+FOR EACH STATEMENT
+EXECUTE FUNCTION _create_bill();
