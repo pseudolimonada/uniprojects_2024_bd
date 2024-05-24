@@ -1,4 +1,6 @@
 import sys
+import hashlib
+
 import psycopg2
 from psycopg2 import pool
 from typing import List, Dict
@@ -14,17 +16,19 @@ db_pool = pool.SimpleConnectionPool(
     database=config['DB_NAME'])
 
 
-def _execute_query(db_con, query, values=None, fetch_id=False, commit=True):   #careful that values must be a tuple even if it's a single value
+def _execute_query(db_con, query, values=None, fetch_id=False,
+                   commit=True):  # careful that values must be a tuple even if it's a single value
     cursor = db_con.cursor()
     if values:
         cursor.execute(query, values)
     else:
         cursor.execute(query)
     if fetch_id:
-        return cursor.fetchone()[0] # might raise errors if empty
+        return cursor.fetchone()[0]  # might raise errors if empty
     if commit:
         db_con.commit()
     cursor.close()
+
 
 def _build_insert_query(table_name, field_list, fetch=None):
     columns = ', '.join(field_list)
@@ -35,6 +39,7 @@ def _build_insert_query(table_name, field_list, fetch=None):
     if fetch:
         query += f" RETURNING {fetch}"
     return query
+
 
 # PROTOTYPICAL QUERY
 # query = """"
@@ -47,14 +52,14 @@ def _build_insert_query(table_name, field_list, fetch=None):
 # _execute_query(db_con, query, values)
 
 def register_user(db_con, user_type, payload):
-    #todo: check if user already exists (nvm the unique constrainti in db fixes)
+    # todo: check if user already exists (nvm the unique constrainti in db fixes)
     person_field_list = ["username", "password", "name", "address", "cc_number", "nif_number", "birth_date"]
 
     # password hashing (could also salt it, hash the salt, salt the hash...)
     hashed_password = hashlib.sha256(payload['password'].encode()).hexdigest()
     payload['password'] = hashed_password
 
-    query = _build_insert_query('person',person_field_list, fetch='id')
+    query = _build_insert_query('person', person_field_list, fetch='id')
     values = tuple([payload[field] for field in person_field_list])
 
     user_id = _execute_query(db_con, query, values, fetch_id=True, commit=False)
@@ -67,7 +72,7 @@ def register_user(db_con, user_type, payload):
     else:
         logger.info('Registering employee')
         _register_employee(db_con, user_type, user_id, payload)
-    
+
     db_con.commit()
 
     return user_id
@@ -91,6 +96,7 @@ def _register_employee(db_con, user_type, user_id, payload):
     elif user_type == 'assistant':
         _register_assistant(db_con, user_id, payload)
 
+
 def _register_doctor(db_con, user_id, payload):
     query = """
     INSERT INTO doctor (license, specialization_id, employee_person_id)
@@ -100,17 +106,20 @@ def _register_doctor(db_con, user_id, payload):
 
     _execute_query(db_con, query, values, commit=False)
 
+
 def _register_nurse(db_con, user_id, payload):
     query = _build_insert_query('nurse', ['employee_person_id'])
     values = (user_id,)
 
     _execute_query(db_con, query, values, commit=False)
 
+
 def _register_assistant(db_con, user_id, payload):
     query = _build_insert_query('assistant', ['certification_details', 'employee_person_id'])
     values = (payload['certification_details'], user_id)
 
     _execute_query(db_con, query, values, commit=False)
+
 
 def login_user(db_con, payload):
     # Query to check for username and password in the person table
@@ -139,28 +148,29 @@ def login_user(db_con, payload):
     SELECT 'patient' FROM patient WHERE person_id = %s
     """
     values = (login_id, login_id, login_id, login_id)
-    (query, values)
     cursor.execute(query, values)
 
-    login_types = [row[0] for row in cursor.fetchall()] # builds list of user roles
+    login_types = [row[0] for row in cursor.fetchall()]  # builds list of user roles
 
     cursor.close()
-    
+
     if len(login_types) == 0:
         raise ValueError('User has no roles assigned')
 
     return login_id, login_types
+
 
 def check_user(db_con, user_id, user_type=None):
     if user_type is None:
         query = """
         SELECT 1 FROM person WHERE id = %s
         """
+        values = (user_id,)
     else:
         query = f"""
         SELECT 1 FROM {user_type} WHERE employee_person_id = %s
         """
-    values = (user_id,) # tuple with a single element, requirement of the execute method
+    values = (user_id,)  # tuple with a single element, requirement of the execute method
 
     cursor = db_con.cursor()
     cursor.execute(query, values)
@@ -174,32 +184,99 @@ def check_user(db_con, user_id, user_type=None):
 def schedule_appointment(db_con, payload, patient_id) -> int:
     pass
 
+
 def get_user_appointments(db_con, patient_user_id) -> List[Dict]:
     pass
 
+
 def schedule_surgery(db_con, payload, hospitalization_id) -> Dict:
     if hospitalization_id is None:
-        #create hospitalization
+        # create hospitalization
         pass
-    #schedule surgery
+    # schedule surgery
     pass
+
 
 def get_prescriptions(db_con, patient_id) -> List[Dict]:
     pass
 
+
 def add_prescription(db_con, payload) -> int:
     pass
 
+
 def execute_payment(db_con, login_id, bill_id, payload):
-    #needs to verify if bill's patient is the same as the login_id
+    # needs to verify if bill's patient is the same as the login_id
     pass
+
 
 def get_top3_patients(db_con):
     pass
 
+
 def get_daily_summary(db_con, date):
     pass
+
 
 def generate_monthly_report(db_con):
     pass
 
+
+def _find_free_doctor(db_con, user_id, new_appointment_start, new_appointment_end):
+    # Retrieve an available doctor
+    query = """
+    SELECT d.employee_person_id
+    FROM doctor d
+    WHERE d.employee_person_id != %s
+    AND  d.employee_person_id NOT IN (
+        SELECT a.employee_person_id
+        FROM appointments a
+        JOIN events e ON a.event_id = e.id
+        WHERE 
+            (e.start_date < %s AND e.end_date > %s)
+
+        UNION
+
+        SELECT s.employee_person_id
+        FROM surgery s
+        JOIN events e ON s.hospitalization_event_id = e.id
+        WHERE 
+            (e.start_date < %s AND e.end_date > %s)
+    )
+    LIMIT 1;
+    """
+    values = (user_id, new_appointment_start, new_appointment_end, new_appointment_start)
+    doctor = _execute_query(db_con, query, values, fetch_id=True)
+    if doctor in None:
+        raise ValueError(f'Could not find any available doctors')
+
+    return doctor[0]
+
+
+def schedule_appoinment(db_con, payload, user_id):
+    # Insert the new event
+    # TODO: to be tested
+    new_appointment_start = payload['appointment_start']
+    new_appointment_end = payload['appointment_end']
+
+    try:
+        found_doctor = _find_free_doctor(db_con, user_id, new_appointment_start, new_appointment_end)
+    except ValueError as e:
+        logger({e})
+
+    cursor = db_con.cursor()
+    cursor.execute(
+        "INSERT INTO events (start_date, end_date) VALUES (%s, %s) RETURNING id",
+        (new_appointment_start, new_appointment_end)
+    )
+    event_id = cursor.fetchone()[0]
+
+    # Insert the new appointment
+    cursor.execute(
+        "INSERT INTO appointments (event_id, employee_person_id) VALUES (%s, %s)",
+        (event_id, found_doctor)
+    )
+    # Commit the transaction
+    cursor.commit()
+    cursor.close()
+    pass
