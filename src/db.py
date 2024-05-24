@@ -190,7 +190,8 @@ def get_prescriptions(db_con, patient_id) -> List[Dict]:
 def add_prescription(db_con, payload) -> int:
     pass
 
-def execute_payment(db_con, bill_id, payload):
+def execute_payment(db_con, login_id, bill_id, payload):
+    #needs to verify if bill's patient is the same as the login_id
     pass
 
 def get_top3_patients(db_con):

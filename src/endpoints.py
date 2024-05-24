@@ -277,7 +277,7 @@ def execute_payment(bill_id, login_id=None, login_types=None):
     validator.payment_details(payload) # check if payload has amount and payment_method
 
     # payment execution logic
-    remaining_value = db.execute_payment(flask.g.db_con, bill_id, payload) #remaining value after payment
+    remaining_value = db.execute_payment(flask.g.db_con, login_id, bill_id, payload) #remaining value after payment
     response = {'status': STATUS_CODES['success'], 'results': remaining_value}
 
     # response logging and return

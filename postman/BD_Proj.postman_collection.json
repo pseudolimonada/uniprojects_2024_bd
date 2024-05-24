@@ -7,50 +7,6 @@
 	},
 	"item": [
 		{
-			"name": "get report",
-			"request": {
-				"auth": {
-					"type": "jwt",
-					"jwt": {
-						"algorithm": "HS256",
-						"isSecretBase64Encoded": false,
-						"payload": "{}",
-						"addTokenTo": "header",
-						"headerPrefix": "Bearer",
-						"queryParamKey": "token",
-						"header": "{}"
-					}
-				},
-				"method": "GET",
-				"header": [
-					{
-						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl19._BVAPnqoQrQLN01gtJiFfcYDhuWX1TOZpD6ZPorKv0g"
-					}
-				],
-				"url": "http://127.0.0.1:8080/dbproj/report"
-			},
-			"response": []
-		},
-		{
-			"name": "register doctor",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\",\n\"name\": \"John Doe\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Cardiology\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": "http://127.0.0.1:8080/dbproj/register/doctor"
-			},
-			"response": []
-		},
-		{
 			"name": "login",
 			"event": [
 				{
@@ -81,6 +37,395 @@
 				},
 				"url": "http://127.0.0.1:8080/dbproj/user",
 				"description": "This is a PUT request and it is used to overwrite an existing piece of data. For instance, after you create an entity with a POST request, you may want to modify that later. You can do that using a PUT request. You typically identify the entity being updated by including an identifier in the URL (eg. `id=1`).\n\nA successful PUT request typically returns a `200 OK`, `201 Created`, or `204 No Content` response code."
+			},
+			"response": []
+		},
+		{
+			"name": "register doctor",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\",\n\"name\": \"John Doe\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Cardiology\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/register/doctor"
+			},
+			"response": []
+		},
+		{
+			"name": "register nurse",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\",\n\"name\": \"John Doe\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Cardiology\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/register/doctor"
+			},
+			"response": []
+		},
+		{
+			"name": "register patient",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\",\n\"name\": \"John Doe\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Cardiology\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/register/doctor"
+			},
+			"response": []
+		},
+		{
+			"name": "register assistant",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\",\n\"name\": \"John Doe\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Cardiology\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/register/doctor"
+			},
+			"response": []
+		},
+		{
+			"name": "schedule appointment",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"doctor_id\": \"doctor_user_id\",\n    \"date\": \"date\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/appointment/"
+			},
+			"response": []
+		},
+		{
+			"name": "get appointments for patient_id",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/appointments/2"
+			},
+			"response": []
+		},
+		{
+			"name": "schedule surgery",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"patient_id\": \"patient_user_id\",\n    \"doctor\": \"doctor_user_id\",\n    \"nurses\": [\n        [\"nurse_user_id1\", \"role1\"],\n        [\"nurse_user_id2\", \"role2\"]\n    ],\n    \"date\": \"date\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/surgery"
+			},
+			"response": []
+		},
+		{
+			"name": "schedule surgery with hosp_id",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"patient_id\": \"patient_user_id\",\n    \"doctor\": \"doctor_user_id\",\n    \"nurses\": [\n        [\"nurse_user_id1\", \"role1\"],\n        [\"nurse_user_id2\", \"role2\"]\n    ],\n    \"date\": \"date\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/surgery/5"
+			},
+			"response": []
+		},
+		{
+			"name": "get prescriptions for patient_id",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"url": "http://127.0.0.1:8080/dbproj/prescriptions/10"
+			},
+			"response": []
+		},
+		{
+			"name": "add prescription",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type\": \"hospitalization/appointment\",\n    \"event_id\": \"id\",\n    \"validity\": \"date\",\n    \"medicines\": [\n        {\n            \"medicine\": \"medicine1_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        },\n        {\n            \"medicine\": \"medicine2_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        },\n        {\n            \"medicine\": \"medicine3_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/prescription/"
+			},
+			"response": []
+		},
+		{
+			"name": "payment of bill id",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"type\": \"hospitalization/appointment\",\n    \"event_id\": \"id\",\n    \"validity\": \"date\",\n    \"medicines\": [\n        {\n            \"medicine\": \"medicine1_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        },\n        {\n            \"medicine\": \"medicine2_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        },\n        {\n            \"medicine\": \"medicine3_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/prescription/"
+			},
+			"response": []
+		},
+		{
+			"name": "top3 patients",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"url": "http://127.0.0.1:8080/dbproj/report"
+			},
+			"response": []
+		},
+		{
+			"name": "daily summary",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"url": "http://127.0.0.1:8080/dbproj/report"
+			},
+			"response": []
+		},
+		{
+			"name": "monthly report",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": {
+						"algorithm": "HS256",
+						"isSecretBase64Encoded": false,
+						"payload": "{}",
+						"addTokenTo": "header",
+						"headerPrefix": "Bearer",
+						"queryParamKey": "token",
+						"header": "{}"
+					}
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "auth-token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+					}
+				],
+				"url": "http://127.0.0.1:8080/dbproj/report"
 			},
 			"response": []
 		}
