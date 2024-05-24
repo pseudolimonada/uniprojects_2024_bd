@@ -126,7 +126,7 @@ def schedule_appointment(login_id=None, login_types=None):
 @app.route('/dbproj/appointments/<patient_user_id>', methods=['GET'])
 @token_required
 @endpoint_error_handler
-def see_appointments(patient_user_id, login_id=None, login_types=None):
+def get_appointments(patient_user_id, login_id=None, login_types=None):
     """
     See Appointments. List all appointments and respective details (e.g., doctor name) of a specific patient. 
     Only assistants and the target patient can use this endpoint.
