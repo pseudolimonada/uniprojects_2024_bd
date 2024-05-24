@@ -33,7 +33,7 @@ def token_required(f):
             token = flask.request.headers['auth-token']
 
         if not token:
-            return flask.jsonify({'message': 'Token is missing!'}), 401
+            return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': "Authorization token is missing"})
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])

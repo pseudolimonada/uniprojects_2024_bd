@@ -11,11 +11,11 @@ STATUS_CODES = {
 
 USER_DETAILS = ['username','password','name','address','cc_number','nif_number','birthdate']
 
-OTHER_USER_DETAILS = {
-    'patient': ['medical_record'],
-    'assistant': ['contract'],
+USER_TYPE_DETAILS = {
+    'patient': ['medical_history'],
+    'assistant': ['contract_details', 'certification_details'],
     'doctor': ['contract_details','license','specialization_name'],
-    'nurse': ['contract'],
+    'nurse': ['contract_details'],
 }
 
 CONTRACT_DETAILS = ['contract_details', 'start_date', 'end_date']

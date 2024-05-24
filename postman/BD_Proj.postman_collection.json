@@ -47,7 +47,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\",\n\"name\": \"John Doe\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Cardiology\"\n}",
+					"raw": "{\n\"username\": \"Dr.house123\",\n\"password\": \"securepassword123\",\n\"name\": \"Housewhatshisname\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Internal Medicine\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -143,7 +143,7 @@
 						}
 					}
 				},
-				"url": "http://127.0.0.1:8080/dbproj/appointment/"
+				"url": "http://127.0.0.1:8080/dbproj/appointment"
 			},
 			"response": []
 		},
@@ -239,7 +239,7 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MTIsImxvZ2luX3R5cGVzIjpbImFzc2lzdGFudCJdLCJleHAiOjE3MTkxNzY4MTJ9.oc6H9EU1f6zG7DOOfdWdVDBYqvO4ddgnBdHNJMamURI"
 					}
 				],
 				"body": {
@@ -370,10 +370,10 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MTIsImxvZ2luX3R5cGVzIjpbImFzc2lzdGFudCJdLCJleHAiOjE3MTkxNzY4MTJ9.oc6H9EU1f6zG7DOOfdWdVDBYqvO4ddgnBdHNJMamURI"
 					}
 				],
-				"url": "http://127.0.0.1:8080/dbproj/report"
+				"url": "http://127.0.0.1:8080/dbproj/top3"
 			},
 			"response": []
 		},
@@ -396,10 +396,10 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MTIsImxvZ2luX3R5cGVzIjpbImFzc2lzdGFudCJdLCJleHAiOjE3MTkxNzY4MTJ9.oc6H9EU1f6zG7DOOfdWdVDBYqvO4ddgnBdHNJMamURI"
 					}
 				],
-				"url": "http://127.0.0.1:8080/dbproj/report"
+				"url": "http://127.0.0.1:8080/dbproj/daily/2024-05-24"
 			},
 			"response": []
 		},

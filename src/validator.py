@@ -1,16 +1,16 @@
-from src.utils import USER_DETAILS, OTHER_USER_DETAILS, CONTRACT_DETAILS
+from src.utils import USER_DETAILS, USER_TYPE_DETAILS, CONTRACT_DETAILS
 
-# checks if user_type is a key in OTHER_USER_DETAILS
+# checks if user_type is a key in USER_TYPE_DETAILS
 def user_type(user_type: str):
-    for user in OTHER_USER_DETAILS.keys():
+    for user in USER_TYPE_DETAILS.keys():
         if user == user_type:
             return
     raise ValueError(f"User type {user_type} not found")
 
-# checks if user_details has all the keys that OTHER_USER_DETAILS[user_type] has
+# checks if user_details has all the keys that USER_TYPE_DETAILS[user_type] has
 def user_register_details(user_type, payload: dict):
     missing_args = []
-    for user_detail in OTHER_USER_DETAILS[user_type]:
+    for user_detail in USER_TYPE_DETAILS[user_type]:
 
         if type(user_detail) == str:
             if user_detail not in payload:
