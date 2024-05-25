@@ -17,16 +17,15 @@ db_pool = pool.SimpleConnectionPool(
 
 
 def _execute_query(db_con, query, values=None, fetch_id=False, commit=True):  # careful that values must be a tuple even if it's a single value
-    cursor = db_con.cursor()
-    if values:
-        cursor.execute(query, values)
-    else:
-        cursor.execute(query)
-    if fetch_id:
-        return cursor.fetchone() #returns empty lisit if empty
-    if commit:
-        db_con.commit()
-    cursor.close()
+    with db_con.cursor() as cursor:
+        if values:
+            cursor.execute(query, values)
+        else:
+            cursor.execute(query)
+        if fetch_id:
+            return cursor.fetchone() #returns empty lisit if empty
+        if commit:
+            db_con.commit()
 
 
 def _build_insert_query(table_name, field_list, fetch=None):
@@ -58,37 +57,35 @@ def login_user(db_con, payload):
     """
     print(payload['username'], payload['password'])
     values = (payload['username'], hashlib.sha256(payload['password'].encode()).hexdigest())
-    cursor = db_con.cursor()
-    cursor.execute(query, values)
-    result = cursor.fetchone()
+    
+    with db_con.cursor() as cursor:
+        cursor.execute(query, values)
+        result = cursor.fetchone()
 
-    if result is None:
-        raise ValueError('Invalid username or password')
+        if result is None:
+            raise ValueError('Invalid username or password')
 
-    login_id = result[0]
+        login_id = result[0]
 
-    # Single query to check for the user_id in the doctor, nurse, assistant, and patient tables efficiently
-    query = """
-    SELECT 'doctor' AS user_type FROM doctor WHERE employee_person_id = %s
-    UNION ALL
-    SELECT 'nurse' FROM nurse WHERE employee_person_id = %s
-    UNION ALL
-    SELECT 'assistant' FROM assistant WHERE employee_person_id = %s
-    UNION ALL
-    SELECT 'patient' FROM patient WHERE person_id = %s
-    """
-    values = (login_id, login_id, login_id, login_id)
-    cursor.execute(query, values)
+        # Single query to check for the user_id in the doctor, nurse, assistant, and patient tables efficiently
+        query = """
+        SELECT 'doctor' AS user_type FROM doctor WHERE employee_person_id = %s
+        UNION ALL
+        SELECT 'nurse' FROM nurse WHERE employee_person_id = %s
+        UNION ALL
+        SELECT 'assistant' FROM assistant WHERE employee_person_id = %s
+        UNION ALL
+        SELECT 'patient' FROM patient WHERE person_id = %s
+        """
+        values = (login_id, login_id, login_id, login_id)
+        cursor.execute(query, values)
 
-    login_types = [row[0] for row in cursor.fetchall()]  # builds list of user roles
-
-    cursor.close()
+        login_types = [row[0] for row in cursor.fetchall()]  # builds list of user roles
 
     if len(login_types) == 0:
         raise ValueError('User has no roles assigned')
 
     return login_id, login_types
-
 
 def check_user(db_con, user_id, user_type=None):
     if user_type is None:
@@ -102,10 +99,9 @@ def check_user(db_con, user_id, user_type=None):
         """
     values = (user_id,)  # tuple with a single element, requirement of the execute method
 
-    cursor = db_con.cursor()
-    cursor.execute(query, values)
-    result = cursor.fetchone()
-    cursor.close()
+    with db_con.cursor() as cursor:
+        cursor.execute(query, values)
+        result = cursor.fetchone()
 
     if result is None:
         raise ValueError(f'User is not a {user_type}')
@@ -241,7 +237,7 @@ def _check_doctor(db_con, patient_id, doctor_id , start_date, end_date):
     SELECT d.employee_person_id
     FROM doctor d
     WHERE d.employee_person_id != %s
-    AND d.employee_person_id == %s
+    AND d.employee_person_id = %s
     AND d.employee_person_id NOT IN (
         SELECT DISTINCT a.doctor_employee_person_id
         FROM appointments a
@@ -266,7 +262,7 @@ def _check_doctor(db_con, patient_id, doctor_id , start_date, end_date):
     values = (patient_id, doctor_id, end_date, start_date, end_date, start_date, end_date, start_date)
     doctor = _execute_query(db_con, query, values, fetch_id=True)
 
-    if doctor in None:
+    if doctor is None:
         raise ValueError(f'Doctor is not available for the given date')
 
     return doctor
@@ -275,22 +271,22 @@ def _check_patient(db_con, patient_id, start_date, end_date):
     # Retrieve an available patient
     query = """
     SELECT p.person_id
-    FROM person p
-    WHERE p.person_id  NOT IN (
+    FROM patient p
+    WHERE p.person_id = %s
+    AND p.person_id  NOT IN (
         SELECT DISTINCT e.patient_person_id
         FROM event e
         WHERE e.start_date < %s AND e.end_date > %s
     )
     LIMIT 1;
     """
-    values = (patient_id, end_date, start_date, end_date, start_date, end_date, start_date)
-    doctor = _execute_query(db_con, query, values, fetch_id=True)
+    values = (patient_id, end_date, start_date)
+    patient = _execute_query(db_con, query, values, fetch_id=True)
 
-    if doctor in None:
+    if patient is None:
         raise ValueError(f'Patient is not available for the given date')
 
-    return doctor
-    pass
+    return patient[0]
 
 def schedule_appointment(db_con, payload, patient_id) -> int:
 
@@ -317,39 +313,40 @@ def schedule_appointment(db_con, payload, patient_id) -> int:
     return appointment[0]
 
 def _create_appointment(db_con, start_date, end_date, patient_id, doctor_id, nurses):
-    cursor = db_con.cursor()
-    cursor.execute(
-        "INSERT INTO event (start_date, end_date, patient_person_id) VALUES (%s, %s, %s) RETURNING id",
-        (start_date, end_date, patient_id)
-    )
-    event = cursor.fetchone()
+    with db_con.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO event (start_date, end_date, patient_person_id) VALUES (%s, %s, %s) RETURNING id",
+            (start_date, end_date, patient_id)
+        )
+        event = cursor.fetchone()
 
-    # Insert the new appointment
-    cursor.execute(
-        "INSERT INTO appointment (event_id, employee_person_id) VALUES (%s, %s)",
-        (event, doctor_id)
-    )
+        # Insert the new appointment
+        cursor.execute(
+            "INSERT INTO appointment (event_id, employee_person_id) VALUES (%s, %s)",
+            (event, doctor_id)
+        )
 
-    data = [(event, nurse[0], nurse[1]) for nurse in nurses]
-    # Insert the new nurse appointments
-    cursor.executemany(
-        "INSERT INTO nurse_appointment (appointment_event_id, nurse_employee_person_id, role) VALUES (%s, %s, %s)",
-        data
-    )
+        data = [(event, nurse[0], nurse[1]) for nurse in nurses]
+        # Insert the new nurse appointments
+        cursor.executemany(
+            "INSERT INTO nurse_appointment (appointment_event_id, nurse_employee_person_id, role) VALUES (%s, %s, %s)",
+            data
+        )
 
-    # Commit the transaction
-    cursor.commit()
-    cursor.close()
+        db_con.commit() # commit the transaction
 
     if event is None:
         raise ValueError('Error creating event')
     
     return event
 
-def schedule_surgery(db_con, payload, hospitalization_id) -> Dict:
+def schedule_surgery(db_con, payload, hospitalization_id, login_id) -> Dict:
     start_date = get_dateobj_from_timestamp(payload['date'])
     end_date = start_date + datetime.timedelta(hours=1)
     patient_id = payload['patient_id'] 
+
+    if patient_id == login_id:
+        raise ValueError('Cannot schedule surgery for yourself')
 
     if start_date < datetime.datetime.now():
         raise ValueError('Cannot schedule surgery in the past')
@@ -373,6 +370,7 @@ def schedule_surgery(db_con, payload, hospitalization_id) -> Dict:
     # create surgery
     free_nurses = _check_nurses(db_con, nurse_ids, start_date, end_date)
     free_doctor = _check_doctor(db_con, patient_id, doctor_id, start_date, end_date)
+    free_patient = _check_patient(db_con, patient_id, start_date, end_date)
 
     surgery = _create_surgery(
         db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id)
@@ -380,10 +378,28 @@ def schedule_surgery(db_con, payload, hospitalization_id) -> Dict:
     if surgery is None:
         raise ValueError('Error scheduling surgery')
     
-    return surgery[0]
+    return hospitalization_id, surgery[0]
 
 def _create_hospitalization(db_con, start_date, end_date, patient_id, nurse_id):
-    pass
+    with db_con.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO event (start_date, end_date, patient_person_id) VALUES (%s, %s, %s) RETURNING id",
+            (start_date, end_date, patient_id)
+        )
+
+        event = cursor.fetchone()
+
+        cursor.execute(
+            "INSERT INTO hospitalization (event_id, nurse_employee_person_id) VALUES (%s, %s)",
+            (event, nurse_id)
+        )
+
+        db_con.commit()
+
+    if event is None:
+        raise ValueError('Error creating event')
+    
+    return event
 
 def _create_surgery(db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id):
     pass
