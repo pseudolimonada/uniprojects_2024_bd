@@ -109,7 +109,7 @@ VALUES
 
 # Criação de bill por cada appointment
 ```
-CREATE OR REPLACE FUNCTION _create_bill()
+CREATE OR REPLACE FUNCTION _create_bill_from_appointment()
 RETURNS trigger AS $$
 BEGIN
     DECLARE
@@ -126,14 +126,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER create_bill_trigger
+CREATE TRIGGER _create_bill_from_appointment_trigger
 AFTER INSERT ON event
 FOR EACH ROW
-EXECUTE FUNCTION _create_bill();
+EXECUTE FUNCTION _create_bill_from_appointment();
 
 -- Criação de bill por cada hospitalization
 
-CREATE OR REPLACE FUNCTION _create_bill()
+CREATE OR REPLACE FUNCTION _create_bill_from_hospitalization()
 RETURNS trigger AS $$
 BEGIN
     DECLARE
@@ -150,10 +150,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER create_bill_trigger
+CREATE TRIGGER _create_bill_from_hospitalization_trigger
 AFTER INSERT ON event
 FOR EACH ROW
-EXECUTE FUNCTION _create_bill();
+EXECUTE FUNCTION _create_bill_from_hospitalization();
 
 -- Update de bill por cada surgery
 
