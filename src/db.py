@@ -122,7 +122,7 @@ def register_user(db_con, user_type, payload):
 
     if user is None:
         raise ValueError('Error creating user')
-    
+
     user_id = user[0]
 
     logger.debug(f"User ID: {user_id}")
@@ -182,7 +182,7 @@ def get_user_appointments(db_con, patient_user_id) -> List[Dict]:
 
 
 # to be tested
-def _check_nurses(db_con, nurse_ids, start_date, end_date):
+def _check_nurses(db_con, patient_id, nurse_ids, start_date, end_date):
     with db_con.cursor() as cursor:
         # Prepare the nurse IDs for the IN operator
         nurse_ids_tuple = tuple(nurse_ids)
@@ -190,7 +190,8 @@ def _check_nurses(db_con, nurse_ids, start_date, end_date):
         query = """
             SELECT nurse_employee_person_id
             FROM nurse
-            WHERE nurse_employee_person_id IN %s
+            WHERE nurse_employee_person_id != %s
+            AND nurse_employee_person_id IN %s
             AND nurse_employee_person_id NOT IN (
             
                 SELECT DISTINCT na.nurse_employee_person_id
@@ -221,14 +222,14 @@ def _check_nurses(db_con, nurse_ids, start_date, end_date):
             )
             LIMIT %s;
             """
-        values = (nurse_ids_tuple, end_date, start_date, end_date, start_date, end_date, start_date, end_date, start_date, len(nurse_ids))
+        values = (patient_id, nurse_ids_tuple, end_date, start_date, end_date, start_date, end_date, start_date, end_date, start_date, len(nurse_ids))
         # Execute the query
         cursor.execute(query, values)
         free_nurses = cursor.fetchall()
 
         if len(free_nurses) < len(nurse_ids):
             raise ValueError('Not enough nurses available for the given date')
-  
+
         return nurse_ids
 
 def _check_doctor(db_con, patient_id, doctor_id , start_date, end_date):
@@ -355,8 +356,7 @@ def schedule_surgery(db_con, payload, hospitalization_id, login_id) -> Dict:
         end_date_hosp = start_date + datetime.timedelta(days=payload['hospitalization_duration'])
         hospitalization_nurse_id = payload['hospitalization_nurse_id']
 
-        hospitalization = _create_hospitalization(
-            db_con, start_date, end_date_hosp, patient_id, hospitalization_nurse_id)
+        hospitalization = _create_hospitalization(db_con, start_date, end_date_hosp, patient_id, hospitalization_nurse_id)
         if hospitalization is None:
             raise ValueError('Error creating hospitalization')
         hospitalization_id = hospitalization[0]
@@ -372,8 +372,7 @@ def schedule_surgery(db_con, payload, hospitalization_id, login_id) -> Dict:
     free_doctor = _check_doctor(db_con, patient_id, doctor_id, start_date, end_date)
     free_patient = _check_patient(db_con, patient_id, start_date, end_date)
 
-    surgery = _create_surgery(
-        db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id)
+    surgery = _create_surgery(db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id)
 
     if surgery is None:
         raise ValueError('Error scheduling surgery')
@@ -388,6 +387,8 @@ def _create_hospitalization(db_con, start_date, end_date, patient_id, nurse_id):
         )
 
         event = cursor.fetchone()
+        if event is None:
+            raise ValueError('Error creating event')
 
         cursor.execute(
             "INSERT INTO hospitalization (event_id, nurse_employee_person_id) VALUES (%s, %s)",
@@ -396,13 +397,29 @@ def _create_hospitalization(db_con, start_date, end_date, patient_id, nurse_id):
 
         db_con.commit()
 
-    if event is None:
-        raise ValueError('Error creating event')
-    
     return event
 
 def _create_surgery(db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id):
-    pass
+    with db_con.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO surgery (start_date, end_date, patient_person_id, hospitalization_event_id, doctor_employee_person_id) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+            (start_date, end_date, patient_id, hospitalization_id, doctor_id)
+        )
+
+        surgery = cursor.fetchone()
+        if surgery is None:
+            raise ValueError('Error creating event')
+
+        data = [(surgery[0], nurse[0], nurse[1]) for nurse in nurses]
+        # Insert the new nurse appointments
+        cursor.executemany(
+            "INSERT INTO nurse_surgery (surgery_id, nurse_employee_person_id, role) VALUES (%s, %s, %s)",
+            data
+        )
+        # Commit the transaction
+        cursor.commit()
+
+    return surgery
 
 
 def get_prescriptions(db_con, patient_id) -> List[Dict]:
@@ -412,10 +429,47 @@ def get_prescriptions(db_con, patient_id) -> List[Dict]:
 def add_prescription(db_con, payload) -> int:
     pass
 
+def _check_bill(db_con, login_id, bill_id):
+    query = """
+        SELECT 1
+        FROM bill b JOIN event e
+        ON b.event_id = e.id
+        WHERE b.id = %s
+        AND e.user_id = %s;
+        """
+    values = (bill_id, login_id)
+    bill = _execute_query(db_con, query, values, fetch_id=True)
+    if bill is None:
+        raise ValueError('This bill is unavailable')
+
+def _pay_amount(db_con, bill_id, amount):
+    with db_con.cursor() as cursor:
+        query = """
+            UPDATE bill b
+            SET b.amount = b.amount - %s,
+                b.status = CASE WHEN b.amount <= %s THEN False ELSE b.status END
+            WHERE b.id = %s
+            RETURN b.amount;
+        """
+        cursor.execute(query, (amount, amount, bill_id))
+
+        rest = cursor.fetchone()[0]
+        cursor.commit()
+
+    return rest
 
 def execute_payment(db_con, login_id, bill_id, payload):
     # needs to verify if bill's patient is the same as the login_id
-    pass
+    #TODO: meter aqui o valor do pagamento da payload
+    paying_amount = payload['']
+
+    _check_bill(db_con, login_id, bill_id)
+    rest = _pay_amount(db_con, bill_id, paying_amount)
+    if rest < 0:
+        rest = -rest
+        raise ValueError(f"Conta paga por completo. Resto: {rest}.")
+    else:
+        raise ValueError(f"Conta paga por completo. Resto: 0")
 
 
 def get_top3_patients(db_con):
