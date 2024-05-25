@@ -120,8 +120,8 @@ BEGIN
     DECLARE
         bill_amount NUMERIC := 50.00;
     BEGIN
-        INSERT INTO bills (id, amount, status, event_id)
-        VALUES (NEXTVAL('bill_id_sequence'), bill_amount, False, new.event_id);
+        INSERT INTO bills (amount, status, event_id)
+        VALUES (bill_amount, False, new.event_id);
 
         COMMIT;
     EXCEPTION
