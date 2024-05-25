@@ -107,13 +107,8 @@ VALUES
 4. Ctrl+C, Ctrl+V pra dentro do terminal
 5. executar
 
-# Criação de bill por cada novo evento
+# Criação de bill por cada appointment
 ```
-CREATE SEQUENCE bill_id_sequence
-START WITH 1
-INCREMENT BY 1
-NO CYCLE;
-
 CREATE OR REPLACE FUNCTION _create_bill()
 RETURNS trigger AS $$
 BEGIN
@@ -133,6 +128,45 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER create_bill_trigger
 AFTER INSERT ON event
-FOR EACH STATEMENT
+FOR EACH ROW
 EXECUTE FUNCTION _create_bill();
+
+-- Criação de bill por cada hospitalization
+
+CREATE OR REPLACE FUNCTION _create_bill()
+RETURNS trigger AS $$
+BEGIN
+    DECLARE
+        bill_amount NUMERIC := 0.00;
+    BEGIN
+        INSERT INTO bills (amount, status, event_id)
+        VALUES (bill_amount, False, new.event_id);
+
+        COMMIT;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE NOTICE 'Error creating bill: %', SQLERRM;
+    END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER create_bill_trigger
+AFTER INSERT ON event
+FOR EACH ROW
+EXECUTE FUNCTION _create_bill();
+
+-- Update de bill por cada surgery
+
+CREATE OR REPLACE FUNCTION _update_bill()
+RETURNS trigger AS $$
+BEGIN
+    NEW.amount := 200.00; -- Update the amount before insert
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER _update_bill_trigger
+AFTER INSERT ON event
+FOR EACH ROW
+EXECUTE FUNCTION _update_bill();
 ```
