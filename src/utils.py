@@ -1,4 +1,5 @@
 import logging
+import datetime
 import sys 
 from dotenv import dotenv_values
 
@@ -69,3 +70,27 @@ def load_config() -> dict:
         sys.exit(1)
 
 config = load_config()
+
+def get_date_from_dateobj(date: datetime.date):
+    try:
+        return date.strftime('%Y-%m-%d')
+    except AttributeError as e:
+        raise ValueError(f"Invalid date object: {str(e)}")
+
+def get_timestamp_from_dateobj(timestamp: datetime.datetime):
+    try:
+        return timestamp.strftime('%Y-%m-%d %H')
+    except AttributeError as e:
+        raise ValueError(f"Invalid timestamp object: {str(e)}")
+
+def get_dateobj_from_date(date_str: str):
+    try:
+        return datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError as e:
+        raise ValueError(f"Invalid date string: {str(e)}")
+
+def get_dateobj_from_timestamp(timestamp_str: str):
+    try:
+        return datetime.datetime.strptime(timestamp_str, '%Y-%m-%d %H')
+    except ValueError as e:
+        raise ValueError(f"Invalid timestamp string, must be in format %Y-%m-%d %H: {str(e)}")

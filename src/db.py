@@ -1,12 +1,12 @@
 import sys
 import hashlib
+import datetime
 
 import psycopg2
 from psycopg2 import pool
 from typing import List, Dict
-import hashlib
 
-from src.utils import config, logger
+from src.utils import config, logger, get_date_from_dateobj, get_timestamp_from_dateobj, get_dateobj_from_date, get_dateobj_from_timestamp
 
 # creates a pool of connections to the database (being opened/closed implicitly in all endpoints, setup in api.py)
 db_pool = pool.SimpleConnectionPool(
@@ -16,15 +16,14 @@ db_pool = pool.SimpleConnectionPool(
     database=config['DB_NAME'])
 
 
-def _execute_query(db_con, query, values=None, fetch_id=False,
-                   commit=True):  # careful that values must be a tuple even if it's a single value
+def _execute_query(db_con, query, values=None, fetch_id=False, commit=True):  # careful that values must be a tuple even if it's a single value
     cursor = db_con.cursor()
     if values:
         cursor.execute(query, values)
     else:
         cursor.execute(query)
     if fetch_id:
-        return cursor.fetchone()[0]  # might raise errors if empty
+        return cursor.fetchone() #returns empty lisit if empty
     if commit:
         db_con.commit()
     cursor.close()
@@ -41,7 +40,7 @@ def _build_insert_query(table_name, field_list, fetch=None):
     return query
 
 
-# PROTOTYPICAL QUERY
+# PROTOTYPICAL SIMPLE QUERY
 # query = """"
 #     SOMETHING SOMETHING
 #     SOMETHING SOMETHING %s
@@ -50,75 +49,6 @@ def _build_insert_query(table_name, field_list, fetch=None):
 #     variable1,
 #     variable2)
 # _execute_query(db_con, query, values)
-
-def register_user(db_con, user_type, payload):
-    # todo: check if user already exists (nvm the unique constrainti in db fixes)
-    person_field_list = ["username", "password", "name", "address", "cc_number", "nif_number", "birth_date"]
-
-    # password hashing (could also salt it, hash the salt, salt the hash...)
-    hashed_password = hashlib.sha256(payload['password'].encode()).hexdigest()
-    payload['password'] = hashed_password
-
-    query = _build_insert_query('person', person_field_list, fetch='id')
-    values = tuple([payload[field] for field in person_field_list])
-
-    user_id = _execute_query(db_con, query, values, fetch_id=True, commit=False)
-
-    logger.debug(f"User ID: {user_id}")
-
-    if user_type == 'patient':
-        logger.info('Registering patient')
-        _register_patient(db_con, user_id, payload)
-    else:
-        logger.info('Registering employee')
-        _register_employee(db_con, user_type, user_id, payload)
-
-    db_con.commit()
-
-    return user_id
-
-
-def _register_patient(db_con, user_id, payload):
-    query = _build_insert_query('patient', ['medical_history', 'person_id'])
-    values = (payload['medical_history'], user_id)
-    _execute_query(db_con, query, values, commit=False)
-
-
-def _register_employee(db_con, user_type, user_id, payload):
-    query = _build_insert_query('employee', ['contract_details', 'person_id'])
-    values = (payload['contract_details'], user_id)
-    _execute_query(db_con, query, values, commit=False)
-
-    if user_type == 'doctor':
-        _register_doctor(db_con, user_id, payload)
-    elif user_type == 'nurse':
-        _register_nurse(db_con, user_id, payload)
-    elif user_type == 'assistant':
-        _register_assistant(db_con, user_id, payload)
-
-
-def _register_doctor(db_con, user_id, payload):
-    query = """
-    INSERT INTO doctor (license, specialization_id, employee_person_id)
-    VALUES (%s, (SELECT id FROM specialization WHERE name = %s), %s)
-    """
-    values = (payload['license'], payload['specialization_name'], user_id)
-
-    _execute_query(db_con, query, values, commit=False)
-
-
-def _register_nurse(db_con, user_id, payload):
-    query = _build_insert_query('nurse', ['employee_person_id'])
-    values = (user_id,)
-
-    _execute_query(db_con, query, values, commit=False)
-
-
-def _register_assistant(db_con, user_id, payload):
-    query = _build_insert_query('assistant', ['certification_details', 'employee_person_id'])
-    values = (payload['certification_details'], user_id)
-
-    _execute_query(db_con, query, values, commit=False)
 
 
 def login_user(db_con, payload):
@@ -181,9 +111,216 @@ def check_user(db_con, user_id, user_type=None):
         raise ValueError(f'User is not a {user_type}')
 
 
-def schedule_appointment(db_con, payload, patient_id) -> int:
-    pass
+def register_user(db_con, user_type, payload):
+    # todo: check if user already exists (nvm the unique constrainti in db fixes)
+    person_field_list = ["username", "password", "name", "address", "cc_number", "nif_number", "birth_date"]
 
+    # password hashing (could also salt it, hash the salt, salt the hash...)
+    hashed_password = hashlib.sha256(payload['password'].encode()).hexdigest()
+    payload['password'] = hashed_password
+
+    query = _build_insert_query('person', person_field_list, fetch='id')
+    values = tuple([payload[field] for field in person_field_list])
+
+    user = _execute_query(db_con, query, values, fetch_id=True, commit=False)
+
+    if user is None:
+        raise ValueError('Error creating user')
+    
+    user_id = user[0]
+
+    logger.debug(f"User ID: {user_id}")
+
+    if user_type == 'patient':
+        logger.info('Registering patient')
+        _register_patient(db_con, user_id, payload)
+    else:
+        logger.info('Registering employee')
+        _register_employee(db_con, user_type, user_id, payload)
+
+    db_con.commit()
+
+    return user_id
+
+
+def _register_patient(db_con, user_id, payload):
+    query = _build_insert_query('patient', ['medical_history', 'person_id'])
+    values = (payload['medical_history'], user_id)
+    _execute_query(db_con, query, values, commit=False)
+
+
+def _register_employee(db_con, user_type, user_id, payload):
+    query = _build_insert_query('employee', ['contract_details', 'person_id'])
+    values = (payload['contract_details'], user_id)
+    _execute_query(db_con, query, values, commit=False)
+
+    if user_type == 'doctor':
+        _register_doctor(db_con, user_id, payload)
+    elif user_type == 'nurse':
+        _register_nurse(db_con, user_id, payload)
+    elif user_type == 'assistant':
+        _register_assistant(db_con, user_id, payload)
+
+
+def _register_doctor(db_con, user_id, payload):
+    query = """
+    INSERT INTO doctor (license, specialization_id, employee_person_id)
+    VALUES (%s, (SELECT id FROM specialization WHERE name = %s), %s)
+    """
+    values = (payload['license'], payload['specialization_name'], user_id)
+
+    _execute_query(db_con, query, values, commit=False)
+
+
+def _register_nurse(db_con, user_id, payload):
+    query = _build_insert_query('nurse', ['employee_person_id'])
+    values = (user_id,)
+
+    _execute_query(db_con, query, values, commit=False)
+
+
+def _register_assistant(db_con, user_id, payload):
+    query = _build_insert_query('assistant', ['certification_details', 'employee_person_id'])
+    values = (payload['certification_details'], user_id)
+
+    _execute_query(db_con, query, values, commit=False)
+
+
+def schedule_appointment(db_con, payload, patient_id) -> int:
+    # Insert the new event
+    # TODO: to be tested
+    start_date = get_dateobj_from_timestamp(payload['date'])
+    end_date = start_date + datetime.timedelta(hours=1)
+    doctor_id = payload['doctor_id']
+    nurses:List[List] = payload['nurses']
+    nurse_ids = [nurse[0] for nurse in nurses]
+
+    free_doctor = _check_doctor(db_con, patient_id, doctor_id, start_date, end_date)
+    free_nurses = _check_nurses(db_con, patient_id, nurse_ids, start_date, end_date)
+
+    # Create appointment
+    appointment = _create_appointment(db_con, start_date, end_date, patient_id, doctor_id , nurses)
+
+    if appointment is None:
+        raise ValueError('Error scheduling appointment')
+
+    return appointment[0]
+
+def _create_appointment(db_con, start_date, end_date, patient_id, doctor_id, nurses):
+    cursor = db_con.cursor()
+    cursor.execute(
+        "INSERT INTO event (start_date, end_date, patient_person_id) VALUES (%s, %s, %s) RETURNING id",
+        (start_date, end_date, patient_id)
+    )
+    event = cursor.fetchone()
+
+    # Insert the new appointment
+    cursor.execute(
+        "INSERT INTO appointment (event_id, employee_person_id) VALUES (%s, %s)",
+        (event, doctor_id)
+    )
+
+    data = [(event, nurse[0], nurse[1]) for nurse in nurses]
+    # Insert the new nurse appointments
+    cursor.executemany(
+        "INSERT INTO nurse_appointment (appointment_event_id, nurse_employee_person_id, role) VALUES (%s, %s, %s)",
+        data
+    )
+
+    # Commit the transaction
+    cursor.commit()
+    cursor.close()
+
+    if event is None:
+        raise ValueError('Error creating event')
+    
+    return event
+
+def _check_nurses(db_con, nurse_ids, start_date, end_date):
+    with db_con.cursor() as cursor:
+        # Prepare the nurse IDs for the IN operator
+        nurse_ids_tuple = tuple(nurse_ids)
+
+        query = """
+            SELECT nurse_employee_person_id
+            FROM nurse
+            WHERE nurse_employee_person_id IN %s
+            AND nurse_employee_person_id NOT IN (
+            
+                SELECT DISTINCT na.nurse_employee_person_id
+                FROM nurse_appointment na
+                JOIN appointment a ON na.appointment_event_id = a.event_id
+                JOIN event e ON a.event_id = e.id
+                WHERE e.start_date < %s AND e.end_date > %s
+
+                UNION ALL
+
+                SELECT DISTINCT ns.nurse_employee_person_id
+                FROM nurse_surgery ns
+                JOIN surgery s ON ns.surgery_id = s.id
+                WHERE s.start_date < %s AND s.end_date > %s
+
+                UNION ALL
+
+                SELECT DISTINCT a.nurse_employee_person_id
+                FROM hospitalization h
+                JOIN event e ON h.event_id = e.id
+                WHERE e.start_date < %s AND e.end_date > %s
+
+                UNION ALL
+
+                SELECT DISTINCT e.patient_person_id
+                FROM event e
+                WHERE e.start_date < %s AND e.end_date > %s
+            )
+            LIMIT %s;
+            """
+        values = (nurse_ids_tuple, end_date, start_date, end_date, start_date, end_date, start_date, end_date, start_date, len(nurse_ids))
+        # Execute the query
+        cursor.execute(query, values)
+        free_nurses = cursor.fetchall()
+
+        if len(free_nurses) < len(nurse_ids):
+            raise ValueError('Not enough nurses available for the given date')
+  
+        return nurse_ids
+
+def _check_doctor(db_con, patient_id, doctor_id , start_date, end_date):
+    # Retrieve an available doctor
+    # todo include case where the patient id might be a doctor in a surgery, appointment or hospitalization
+    query = """
+    SELECT d.employee_person_id
+    FROM doctor d
+    WHERE d.employee_person_id != %s
+    AND d.employee_person_id == %s
+    AND d.employee_person_id NOT IN (
+        SELECT DISTINCT a.doctor_employee_person_id
+        FROM appointments a
+        JOIN event e ON a.event_id = e.id
+        WHERE e.start_date < %s AND e.end_date > %s
+
+        UNION ALL
+
+        SELECT DISTINCT s.doctor_employee_person_id
+        FROM surgery s
+        JOIN event e ON s.hospitalization_event_id = e.id
+        WHERE e.start_date < %s AND e.end_date > %s
+
+        UNION ALL
+
+        SELECT DISTINCT e.patient_person_id
+        FROM event e
+        WHERE e.start_date < %s AND e.end_date > %s
+    )
+    LIMIT 1;
+    """
+    values = (patient_id, doctor_id, end_date, start_date, end_date, start_date, end_date, start_date)
+    doctor = _execute_query(db_con, query, values, fetch_id=True)
+
+    if doctor in None:
+        raise ValueError(f'Doctor was not available for the given date')
+
+    return doctor
 
 def get_user_appointments(db_con, patient_user_id) -> List[Dict]:
     pass
@@ -192,8 +329,19 @@ def get_user_appointments(db_con, patient_user_id) -> List[Dict]:
 def schedule_surgery(db_con, payload, hospitalization_id) -> Dict:
     if hospitalization_id is None:
         # create hospitalization
+        hospitalization_id = _create_hospitalization(db_con, payload)
         pass
+
+    # create surgery
+    surgery_id = _create_surgery(db_con, payload, hospitalization_id)
+
     # schedule surgery
+    pass
+
+def _create_hospitalization(db_con, payload) -> List:
+    pass
+
+def _create_surgery(db_con, payload, hospitalization_id) -> List:
     pass
 
 
@@ -221,62 +369,3 @@ def get_daily_summary(db_con, date):
 def generate_monthly_report(db_con):
     pass
 
-
-def _find_free_doctor(db_con, user_id, new_appointment_start, new_appointment_end):
-    # Retrieve an available doctor
-    query = """
-    SELECT d.employee_person_id
-    FROM doctor d
-    WHERE d.employee_person_id != %s
-    AND  d.employee_person_id NOT IN (
-        SELECT a.employee_person_id
-        FROM appointments a
-        JOIN events e ON a.event_id = e.id
-        WHERE 
-            (e.start_date < %s AND e.end_date > %s)
-
-        UNION
-
-        SELECT s.employee_person_id
-        FROM surgery s
-        JOIN events e ON s.hospitalization_event_id = e.id
-        WHERE 
-            (e.start_date < %s AND e.end_date > %s)
-    )
-    LIMIT 1;
-    """
-    values = (user_id, new_appointment_start, new_appointment_end, new_appointment_start)
-    doctor = _execute_query(db_con, query, values, fetch_id=True)
-    if doctor in None:
-        raise ValueError(f'Could not find any available doctors')
-
-    return doctor[0]
-
-
-def schedule_appoinment(db_con, payload, user_id):
-    # Insert the new event
-    # TODO: to be tested
-    new_appointment_start = payload['appointment_start']
-    new_appointment_end = payload['appointment_end']
-
-    try:
-        found_doctor = _find_free_doctor(db_con, user_id, new_appointment_start, new_appointment_end)
-    except ValueError as e:
-        logger({e})
-
-    cursor = db_con.cursor()
-    cursor.execute(
-        "INSERT INTO events (start_date, end_date) VALUES (%s, %s) RETURNING id",
-        (new_appointment_start, new_appointment_end)
-    )
-    event_id = cursor.fetchone()[0]
-
-    # Insert the new appointment
-    cursor.execute(
-        "INSERT INTO appointments (event_id, employee_person_id) VALUES (%s, %s)",
-        (event_id, found_doctor)
-    )
-    # Commit the transaction
-    cursor.commit()
-    cursor.close()
-    pass
