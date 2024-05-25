@@ -355,10 +355,11 @@ def schedule_surgery(db_con, payload, hospitalization_id) -> Dict:
         raise ValueError('Cannot schedule surgery in the past')
     
     if hospitalization_id is None:
-        end_date = start_date + datetime.timedelta(days=payload['hospitalization_duration'])
+        end_date_hosp = start_date + datetime.timedelta(days=payload['hospitalization_duration'])
         hospitalization_nurse_id = payload['hospitalization_nurse_id']
 
-        hospitalization = _create_hospitalization(db_con, patient_id, hospitalization_nurse_id, start_date, end_date)
+        hospitalization = _create_hospitalization(
+            db_con, start_date, end_date_hosp, patient_id, hospitalization_nurse_id)
         if hospitalization is None:
             raise ValueError('Error creating hospitalization')
         hospitalization_id = hospitalization[0]
@@ -373,17 +374,18 @@ def schedule_surgery(db_con, payload, hospitalization_id) -> Dict:
     free_nurses = _check_nurses(db_con, nurse_ids, start_date, end_date)
     free_doctor = _check_doctor(db_con, patient_id, doctor_id, start_date, end_date)
 
-    surgery = _create_surgery(db_con, payload, hospitalization_id)
+    surgery = _create_surgery(
+        db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id)
 
     if surgery is None:
         raise ValueError('Error scheduling surgery')
     
     return surgery[0]
 
-def _create_hospitalization(db_con, payload) -> List:
+def _create_hospitalization(db_con, start_date, end_date, patient_id, nurse_id):
     pass
 
-def _create_surgery(db_con, payload, hospitalization_id) -> List:
+def _create_surgery(db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id):
     pass
 
 
