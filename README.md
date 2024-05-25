@@ -101,13 +101,8 @@ VALUES
 # TRIGGERS
 
 # Adicionar um trigger à DB
-1. abrir o PgAdmin
-2. clicar em event (tabelas do lado esquerdo)
-3. no canto superior esquerdo clicar no í cone que diz "all rows" quando metes o rato por cima
-4. Ctrl+C, Ctrl+V pra dentro do terminal
-5. executar
+Abrir o PgAdmin e correr o script na query tool
 
-# Criação de bill por cada appointment
 ```
 CREATE OR REPLACE FUNCTION _create_bill_from_appointment()
 RETURNS trigger AS $$
