@@ -44,6 +44,7 @@ def authenticate_user():
 
     #authentication logic
     login_id, login_types = db.login_user(flask.g.db_con, payload)
+    print("AT AUTHENTICATE:", login_id, login_types)
     try:
         token_payload = {
             'login_id': login_id,

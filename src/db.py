@@ -90,12 +90,12 @@ def login_user(db_con, payload):
 def check_user(db_con, user_id, user_type=None):
     if user_type is None:
         query = """
-        SELECT 1 FROM person WHERE id = %s
+        SELECT id FROM person WHERE id = %s
         """
         values = (user_id,)
     else:
         query = f"""
-        SELECT 1 FROM {user_type} WHERE employee_person_id = %s
+        SELECT id FROM {user_type} WHERE employee_person_id = %s
         """
     values = (user_id,)  # tuple with a single element, requirement of the execute method
 
@@ -106,6 +106,7 @@ def check_user(db_con, user_id, user_type=None):
     if result is None:
         raise ValueError(f'User is not a {user_type}')
 
+    return result[0]
 
 def register_user(db_con, user_type, payload):
     # todo: check if user already exists (nvm the unique constrainti in db fixes)
@@ -188,10 +189,10 @@ def _check_nurses(db_con, nurse_ids, start_date, end_date):
         nurse_ids_tuple = tuple(nurse_ids)
 
         query = """
-            SELECT nurse_employee_person_id
+            SELECT employee_person_id
             FROM nurse
-            WHERE nurse_employee_person_id IN %s
-            AND nurse_employee_person_id NOT IN (
+            WHERE employee_person_id IN %s
+            AND employee_person_id NOT IN (
             
                 SELECT DISTINCT na.nurse_employee_person_id
                 FROM nurse_appointment na
@@ -208,7 +209,7 @@ def _check_nurses(db_con, nurse_ids, start_date, end_date):
 
                 UNION ALL
 
-                SELECT DISTINCT a.nurse_employee_person_id
+                SELECT DISTINCT h.nurse_employee_person_id
                 FROM hospitalization h
                 JOIN event e ON h.event_id = e.id
                 WHERE e.start_date < %s AND e.end_date > %s
@@ -231,16 +232,15 @@ def _check_nurses(db_con, nurse_ids, start_date, end_date):
   
         return nurse_ids
 
-def _check_doctor(db_con, patient_id, doctor_id , start_date, end_date):
+def _check_doctor(db_con, doctor_id , start_date, end_date):
     # Retrieve an available doctor
     query = """
     SELECT d.employee_person_id
     FROM doctor d
-    WHERE d.employee_person_id != %s
-    AND d.employee_person_id = %s
+    WHERE d.employee_person_id = %s
     AND d.employee_person_id NOT IN (
         SELECT DISTINCT a.doctor_employee_person_id
-        FROM appointments a
+        FROM appointment a
         JOIN event e ON a.event_id = e.id
         WHERE e.start_date < %s AND e.end_date > %s
 
@@ -259,7 +259,7 @@ def _check_doctor(db_con, patient_id, doctor_id , start_date, end_date):
     )
     LIMIT 1;
     """
-    values = (patient_id, doctor_id, end_date, start_date, end_date, start_date, end_date, start_date)
+    values = (doctor_id, end_date, start_date, end_date, start_date, end_date, start_date)
     doctor = _execute_query(db_con, query, values, fetch_id=True)
 
     if doctor is None:
@@ -289,7 +289,6 @@ def _check_patient(db_con, patient_id, start_date, end_date):
     return patient[0]
 
 def schedule_appointment(db_con, payload, patient_id) -> int:
-
     start_date = get_dateobj_from_timestamp(payload['date'])
     end_date = start_date + datetime.timedelta(hours=1)
 
@@ -300,8 +299,11 @@ def schedule_appointment(db_con, payload, patient_id) -> int:
     nurses:List[List] = payload['nurses']
     nurse_ids = [nurse[0] for nurse in nurses]
 
-    free_doctor = _check_doctor(db_con, patient_id, doctor_id, start_date, end_date)
-    free_nurses = _check_nurses(db_con, patient_id, nurse_ids, start_date, end_date)
+    if patient_id in nurse_ids or patient_id == doctor_id:
+        raise ValueError('Cannot schedule an appointment with yourself')
+
+    free_doctor = _check_doctor(db_con, doctor_id, start_date, end_date)
+    free_nurses = _check_nurses(db_con, nurse_ids, start_date, end_date)
     free_patient = _check_patient(db_con, patient_id, start_date, end_date)
 
     # Create appointment
@@ -322,7 +324,7 @@ def _create_appointment(db_con, start_date, end_date, patient_id, doctor_id, nur
 
         # Insert the new appointment
         cursor.execute(
-            "INSERT INTO appointment (event_id, employee_person_id) VALUES (%s, %s)",
+            "INSERT INTO appointment (event_id, doctor_employee_person_id) VALUES (%s, %s)",
             (event, doctor_id)
         )
 
@@ -369,7 +371,7 @@ def schedule_surgery(db_con, payload, hospitalization_id, login_id) -> Dict:
 
     # create surgery
     free_nurses = _check_nurses(db_con, nurse_ids, start_date, end_date)
-    free_doctor = _check_doctor(db_con, patient_id, doctor_id, start_date, end_date)
+    free_doctor = _check_doctor(db_con, doctor_id, start_date, end_date)
     free_patient = _check_patient(db_con, patient_id, start_date, end_date)
 
     surgery = _create_surgery(
@@ -414,7 +416,6 @@ def add_prescription(db_con, payload) -> int:
 
 
 def execute_payment(db_con, login_id, bill_id, payload):
-    # needs to verify if bill's patient is the same as the login_id
     pass
 
 

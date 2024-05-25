@@ -104,64 +104,65 @@ VALUES
 Abrir o PgAdmin e correr o script na query tool
 
 ```
+-- Trigger for appointments
 CREATE OR REPLACE FUNCTION _create_bill_from_appointment()
 RETURNS trigger AS $$
 BEGIN
     DECLARE
         bill_amount NUMERIC := 50.00;
     BEGIN
-        INSERT INTO bills (amount, status, event_id)
-        VALUES (bill_amount, False, new.event_id);
+        INSERT INTO bill (amount, status, event_id)
+        VALUES (bill_amount, False, NEW.event_id);
 
-        COMMIT;
+        RETURN NEW;
     EXCEPTION
         WHEN OTHERS THEN
             RAISE NOTICE 'Error creating bill: %', SQLERRM;
+            RETURN NEW;
     END;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER _create_bill_from_appointment_trigger
-AFTER INSERT ON event
+AFTER INSERT ON appointment
 FOR EACH ROW
 EXECUTE FUNCTION _create_bill_from_appointment();
 
--- Criação de bill por cada hospitalization
-
+-- Trigger for hospitalizations
 CREATE OR REPLACE FUNCTION _create_bill_from_hospitalization()
 RETURNS trigger AS $$
 BEGIN
     DECLARE
         bill_amount NUMERIC := 0.00;
     BEGIN
-        INSERT INTO bills (amount, status, event_id)
-        VALUES (bill_amount, False, new.event_id);
+        INSERT INTO bill (amount, status, event_id)
+        VALUES (bill_amount, False, NEW.event_id);
 
-        COMMIT;
+        RETURN NEW;
     EXCEPTION
         WHEN OTHERS THEN
             RAISE NOTICE 'Error creating bill: %', SQLERRM;
+            RETURN NEW;
     END;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER _create_bill_from_hospitalization_trigger
-AFTER INSERT ON event
+AFTER INSERT ON hospitalization
 FOR EACH ROW
 EXECUTE FUNCTION _create_bill_from_hospitalization();
 
--- Update de bill por cada surgery
-
+-- Trigger for surgery
 CREATE OR REPLACE FUNCTION _update_bill()
 RETURNS trigger AS $$
 BEGIN
-    NEW.amount := 200.00; -- Update the amount before insert
+    UPDATE bill SET amount = 200.00 WHERE event_id = NEW.hospitalization_event_id;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER _update_bill_trigger
-AFTER INSERT ON event
+AFTER INSERT ON surgery
 FOR EACH ROW
 EXECUTE FUNCTION _update_bill();
 ```
