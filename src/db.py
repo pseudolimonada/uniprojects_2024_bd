@@ -294,7 +294,7 @@ def schedule_appointment(db_con, payload, patient_id) -> int:
     end_date = start_date + datetime.timedelta(hours=1)
 
     if start_date < datetime.datetime.now():
-        raise ValueError('Cannot schedule appointment in the past')
+        raise ValueError('Stop there time traveler')
 
     doctor_id = payload['doctor_id']
     nurses:List[List] = payload['nurses']
@@ -305,12 +305,12 @@ def schedule_appointment(db_con, payload, patient_id) -> int:
     free_patient = _check_patient(db_con, patient_id, start_date, end_date)
 
     # Create appointment
-    appointment = _create_appointment(db_con, start_date, end_date, patient_id, doctor_id , nurses)
+    event = _create_appointment(db_con, start_date, end_date, patient_id, doctor_id , nurses)
 
-    if appointment is None:
+    if event is None:
         raise ValueError('Error scheduling appointment')
 
-    return appointment[0]
+    return event[0]
 
 def _create_appointment(db_con, start_date, end_date, patient_id, doctor_id, nurses):
     with db_con.cursor() as cursor:
@@ -349,21 +349,21 @@ def schedule_surgery(db_con, payload, hospitalization_id, login_id) -> Dict:
         raise ValueError('Cannot schedule surgery for yourself')
 
     if start_date < datetime.datetime.now():
-        raise ValueError('Cannot schedule surgery in the past')
+        raise ValueError('Stop there time traveler!')
     
     if hospitalization_id is None:
         end_date_hosp = start_date + datetime.timedelta(days=payload['hospitalization_duration'])
         hospitalization_nurse_id = payload['hospitalization_nurse_id']
 
-        hospitalization = _create_hospitalization(
+        event = _create_hospitalization(
             db_con, start_date, end_date_hosp, patient_id, hospitalization_nurse_id)
-        if hospitalization is None:
+        
+        if event is None:
             raise ValueError('Error creating hospitalization')
-        hospitalization_id = hospitalization[0]
+        
+        hospitalization_id = event[0]
 
-    nurses = payload['nurses']
     doctor_id = payload['doctor_id']
-
     nurses:List[List] = payload['nurses']
     nurse_ids = [nurse[0] for nurse in nurses]
 
