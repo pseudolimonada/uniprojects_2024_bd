@@ -79,7 +79,7 @@ def get_date_from_dateobj(date: datetime.date):
 
 def get_timestamp_from_dateobj(timestamp: datetime.datetime):
     try:
-        return timestamp.strftime('%Y-%m-%d %H')
+        return timestamp.strftime('%Y-%m-%d %Hh')
     except AttributeError as e:
         raise ValueError(f"Invalid timestamp object: {str(e)}")
 

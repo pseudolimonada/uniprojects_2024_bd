@@ -87,6 +87,7 @@ def login_user(db_con, payload):
 
     return login_id, login_types
 
+
 def check_user(db_con, user_id, user_type=None):
     if user_type is None:
         query = """
@@ -107,6 +108,7 @@ def check_user(db_con, user_id, user_type=None):
         raise ValueError(f'User is not a {user_type}')
 
     return result[0]
+
 
 def register_user(db_con, user_type, payload):
     # todo: check if user already exists (nvm the unique constrainti in db fixes)
@@ -179,51 +181,71 @@ def _register_assistant(db_con, user_id, payload):
 
 
 def get_user_appointments(db_con, patient_user_id) -> List[Dict]:
-    pass
-
-
-# to be tested
-def _check_nurses(db_con, nurse_ids, start_date, end_date):
+    query = """
+    SELECT DISTINCT e.id, d.employee_person_id, p.name, e.start_date
+    FROM event e
+    JOIN appointment a ON e.id = a.event_id
+    JOIN doctor d ON a.doctor_employee_person_id = d.employee_person_id
+    JOIN person p ON p.id = d.employee_person_id
+    WHERE e.patient_person_id = %s
+    """
+    values = (patient_user_id,)
     with db_con.cursor() as cursor:
-        # Prepare the nurse IDs for the IN operator
-        nurse_ids_tuple = tuple(nurse_ids)
+        cursor.execute(query, values)
+        appointments = cursor.fetchall()
+    
+    if appointments is None:
+        raise ValueError("Patient does not have any appointments")
+    
+    return [{
+        "appointment_id": appointment[0],
+        "doctor_id": appointment[1],
+        "doctor_name": appointment[2],
+        "date": get_timestamp_from_dateobj(appointment[3]),
+    } for appointment in appointments]
 
-        query = """
-            SELECT employee_person_id
-            FROM nurse
-            WHERE employee_person_id IN %s
-            AND employee_person_id NOT IN (
-            
-                SELECT DISTINCT na.nurse_employee_person_id
-                FROM nurse_appointment na
-                JOIN appointment a ON na.appointment_event_id = a.event_id
-                JOIN event e ON a.event_id = e.id
-                WHERE e.start_date < %s AND e.end_date > %s
 
-                UNION ALL
+def _check_nurses(db_con, nurse_ids, start_date, end_date):
+    # Prepare the nurse IDs for the IN operator
+    nurse_ids_tuple = tuple(nurse_ids)
 
-                SELECT DISTINCT ns.nurse_employee_person_id
-                FROM nurse_surgery ns
-                JOIN surgery s ON ns.surgery_id = s.id
-                WHERE s.start_date < %s AND s.end_date > %s
+    query = """
+        SELECT employee_person_id
+        FROM nurse
+        WHERE employee_person_id IN %s
+        AND employee_person_id NOT IN (
+        
+            SELECT DISTINCT na.nurse_employee_person_id
+            FROM nurse_appointment na
+            JOIN appointment a ON na.appointment_event_id = a.event_id
+            JOIN event e ON a.event_id = e.id
+            WHERE e.start_date < %s AND e.end_date > %s
 
-                UNION ALL
+            UNION ALL
 
-                SELECT DISTINCT h.nurse_employee_person_id
-                FROM hospitalization h
-                JOIN event e ON h.event_id = e.id
-                WHERE e.start_date < %s AND e.end_date > %s
+            SELECT DISTINCT ns.nurse_employee_person_id
+            FROM nurse_surgery ns
+            JOIN surgery s ON ns.surgery_id = s.id
+            WHERE s.start_date < %s AND s.end_date > %s
 
-                UNION ALL
+            UNION ALL
 
-                SELECT DISTINCT e.patient_person_id
-                FROM event e
-                WHERE e.start_date < %s AND e.end_date > %s
-            )
-            LIMIT %s;
-            """
-        values = (nurse_ids_tuple, end_date, start_date, end_date, start_date, end_date, start_date, end_date, start_date, len(nurse_ids))
-        # Execute the query
+            SELECT DISTINCT h.nurse_employee_person_id
+            FROM hospitalization h
+            JOIN event e ON h.event_id = e.id
+            WHERE e.start_date < %s AND e.end_date > %s
+
+            UNION ALL
+
+            SELECT DISTINCT e.patient_person_id
+            FROM event e
+            WHERE e.start_date < %s AND e.end_date > %s
+        )
+        LIMIT %s;
+        """
+    values = (nurse_ids_tuple, end_date, start_date, end_date, start_date, end_date, start_date, end_date, start_date, len(nurse_ids))
+    
+    with db_con.cursor() as cursor:
         cursor.execute(query, values)
         free_nurses = cursor.fetchall()
 
@@ -288,6 +310,7 @@ def _check_patient(db_con, patient_id, start_date, end_date):
 
     return patient[0]
 
+
 def schedule_appointment(db_con, payload, patient_id) -> int:
     start_date = get_dateobj_from_timestamp(payload['date'])
     end_date = start_date + datetime.timedelta(hours=1)
@@ -341,6 +364,7 @@ def _create_appointment(db_con, start_date, end_date, patient_id, doctor_id, nur
         raise ValueError('Error creating event')
     
     return event
+
 
 def schedule_surgery(db_con, payload, hospitalization_id, login_id) -> Dict:
     start_date = get_dateobj_from_timestamp(payload['date'])
