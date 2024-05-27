@@ -19,8 +19,15 @@ USER_TYPE_DETAILS = {
     'nurse': ['contract_details'],
 }
 
-CONTRACT_DETAILS = ['contract_details', 'start_date', 'end_date']
+APPOINTMENT_DETAILS = ['doctor_id','date','nurses'] #nurses is a list of lists with id and role
 
+SURGERY_DETAILS = ['doctor_id','date','nurses','hospitalization_duration', 'hospitalization_nurse_id'] #head nurse
+
+PRESCRIPTION_DETAILS = ['type','event_id','validity','medicines']
+
+PRESCRIPTION_MED_DETAILS = ['medicine','posology_dose','posology_frequency']
+
+PAYMENT_DETAILS = ['amount','payment_method']
 
 def setup_logger() -> logging.Logger:
     # Create logger

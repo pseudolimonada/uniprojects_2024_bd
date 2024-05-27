@@ -112,7 +112,7 @@ def schedule_appointment(login_id=None, login_types=None):
     payload = flask.request.get_json()
     logger.info('POST /dbproj/appointment')
     logger.debug(f'POST /dbproj/appointment - payload received: {payload}')
-    validator.appointment_details(payload) # check if payload has doctor_id and date
+    validator.appointment_details(payload) # check if payload has doctor_id, date and nurses, and if nurses is valid
 
     #appointment schedule logic
     appointment_id = db.schedule_appointment(flask.g.db_con, payload, patient_id=login_id)
@@ -244,7 +244,7 @@ def add_prescription(login_id=None, login_types=None):
     payload = flask.request.get_json()
     logger.info('POST /dbproj/prescription')
     logger.debug(f'POST /dbproj/prescription - payload received: {payload}')
-    validator.prescription_details(payload) # check if payload has type, event_id, validity and medicines
+    validator.prescription_details(payload) # check for type, event_id, validity and medicines, and if type is valid (prevents SQL injection)
 
     # prescription creation logic
     prescription_id = db.add_prescription(flask.g.db_con, payload) #prescription id

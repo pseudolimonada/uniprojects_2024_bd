@@ -1,25 +1,21 @@
-from src.utils import USER_DETAILS, USER_TYPE_DETAILS, CONTRACT_DETAILS
+from src.utils import USER_DETAILS, USER_TYPE_DETAILS, APPOINTMENT_DETAILS, SURGERY_DETAILS, PRESCRIPTION_DETAILS, PRESCRIPTION_MED_DETAILS, PAYMENT_DETAILS
 
-# checks if user_type is a key in USER_TYPE_DETAILS
 def user_type(user_type: str):
     for user in USER_TYPE_DETAILS.keys():
         if user == user_type:
             return
     raise ValueError(f"User type {user_type} not found")
 
-# checks if user_details has all the keys that USER_TYPE_DETAILS[user_type] has
 def user_register_details(user_type, payload: dict):
     missing_args = []
+
+    for user_detail in USER_DETAILS:
+        if user_detail not in payload:
+            missing_args.append(user_detail)
+
     for user_detail in USER_TYPE_DETAILS[user_type]:
-
-        if type(user_detail) == str:
-            if user_detail not in payload:
-                missing_args.append(user_detail)
-
-        if type(user_detail) == list:
-            for nested_detail in user_detail:
-                if nested_detail not in payload:
-                    missing_args.append(nested_detail)
+        if user_detail not in payload:
+            missing_args.append(user_detail)
     
     if len(missing_args) != 0:
         raise ValueError(f"Missing arguments: {', '.join(missing_args)}")
@@ -29,14 +25,69 @@ def user_login_details(payload: dict):
         raise ValueError("Missing username or password")        
 
 def appointment_details(payload: dict):
-    pass
+    nurses = payload['nurses']
+
+    if type(nurses) != list or len(nurses) == 0:
+        raise ValueError("Nurses must be a list with at least one nurse")
+    
+    for nurse in nurses:
+        if type(nurse) != list or len(nurse) != 2:
+            raise ValueError("Nurse must be a list with id and role")
+
+    missing_args = []
+
+    for appointment_detail in APPOINTMENT_DETAILS:
+        if appointment_detail not in payload:
+            missing_args.append(appointment_detail)
+
+    if len(missing_args) != 0:
+        raise ValueError(f"Missing arguments: {', '.join(missing_args)}")
 
 def surgery_details(payload: dict):
-    pass
+    nurses = payload['nurses']
+
+    if type(nurses) != list or len(nurses) == 0:
+        raise ValueError("Nurses must be a list with at least one nurse")
+    
+    for nurse in nurses:
+        if type(nurse) != list or len(nurse) != 2:
+            raise ValueError("Nurse must be a list with id and role")
+        
+    missing_args = []
+
+    for surgery_detail in SURGERY_DETAILS:
+        if surgery_detail not in payload:
+            missing_args.append(surgery_detail)
+
+    if len(missing_args) != 0:
+        raise ValueError(f"Missing arguments: {', '.join(missing_args)}")
 
 def prescription_details(payload: dict):
-    pass
+    type = payload['type']
+    medicines = payload['medicines']
+    missing_args = []
 
+    if type != 'hospitalization' and type != 'appointment': #prevents sql injection as this will be a table name
+        raise ValueError("Invalid prescription type")
+
+    for medicine in medicines:
+        for prescription_med_detail in PRESCRIPTION_MED_DETAILS:
+            if prescription_med_detail not in medicine:
+                raise ValueError(f"Missing {prescription_med_detail} in medicine")
+
+    for prescription_detail in PRESCRIPTION_DETAILS:
+        if prescription_detail not in payload:
+            missing_args.append(prescription_detail)
+    
+    if len(missing_args) != 0:
+        raise ValueError(f"Missing arguments: {', '.join(missing_args)}")
 
 def payment_details(payload: dict):
-    pass
+    missing_args = []
+
+    for payment_detail in PAYMENT_DETAILS:
+        if payment_detail not in payload:
+            missing_args.append(payment_detail)
+
+    if len(missing_args) != 0:
+        raise ValueError(f"Missing arguments: {', '.join(missing_args)}")

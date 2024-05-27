@@ -432,11 +432,79 @@ def _create_surgery(db_con, start_date, end_date, patient_id, doctor_id, nurses,
 
 
 def get_prescriptions(db_con, patient_id) -> List[Dict]:
-    pass
+    query = """
+    SELECT 
+    p.id,
+    p.validity,
+    json_agg(
+        json_build_object(
+            'medication_id', m.id,
+            'medication_name', m.name,
+            'dosage', po.dosage,
+            'frequency', po.frequency
+        )
+        ) AS posology_info
+    FROM prescription p
+    JOIN event e ON p.event_id = e.id
+    JOIN patient pa ON e.patient_person_id = pa.person_id
+    JOIN posology po ON po.prescription_id = p.id
+    JOIN medication m ON m.id = po.medication_id
+    WHERE pa.person_id = %s
+    GROUP BY p.id
+    """
+    values = (patient_id,)
+    with db_con.cursor() as cursor:
+        cursor.execute(query, values)
+        prescriptions = cursor.fetchall()
+    
+    if prescriptions is None:
+        raise ValueError("Patient does not have any prescriptions")
+    
+    return [{
+        "prescription_id": prescription[0],
+        "validity": get_date_from_dateobj(prescription[1]),
+        "posology": prescription[2]
+        
+    } for prescription in prescriptions]
 
 
 def add_prescription(db_con, payload) -> int:
-    pass
+    type = payload['type']
+    event_id = payload['event_id']
+    validity = payload['validity']
+
+    with db_con.cursor() as cursor:
+        cursor.execute(
+            f"SELECT 1 FROM {type} WHERE event_id = %s",
+            (event_id,)
+        )
+        if cursor.fetchone() is None:
+            raise ValueError(f'Invalid {type} id')
+
+        cursor.execute(
+            "INSERT INTO prescription (event_id, validity) VALUES (%s, %s) RETURNING id",
+            (event_id, validity)
+        )
+        prescription = cursor.fetchone()
+
+        if prescription is None:
+            raise ValueError('Error creating prescription')
+        
+        prescription_id = prescription[0]
+        
+        query = """ 
+        INSERT INTO posology (prescription_id, medication_id, dosage, frequency)
+        VALUES (%s, (SELECT id FROM medication WHERE name = %s), %s, %s)
+        """
+        values = [(prescription_id, med['medicine'], med['posology_dose'], med['posology_frequency']) 
+                     for med in payload['medicines']]
+        
+        cursor.executemany(query, values)
+        #could add a select count to validate medicines being added before committing, but seems pedantic
+
+        db_con.commit()
+    
+    return prescription_id
 
 
 def execute_payment(db_con, login_id, bill_id, payload):
