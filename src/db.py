@@ -645,9 +645,84 @@ def get_top3_patients(db_con):
     } for patient in patients]
 
 def get_daily_summary(db_con, date):
-    pass
+    #daily summary for all hospitalizations
+    #surgeries, payments, prescriptions
+    now = datetime.datetime.now()
+    start_date = datetime.datetime(now.year, now.month, 1)
+    end_date = datetime.datetime(now.year, now.month, 2)
+
+    query = """
+        SELECT
+        
+    """
+
+
 
 
 def generate_monthly_report(db_con):
-    pass
+    now = datetime.datetime.now()
+    present_date = datetime.datetime(now.year, now.month, 1)
 
+    query = """
+    WITH
+    SurgeryCounts AS (
+        SELECT
+            s.doctor_employee_person_id,
+            DATE_TRUNC('month', s.start_date) AS surgery_month,
+            COUNT(*) AS surgery_count
+        FROM
+            surgery s
+        WHERE
+            s.start_date >= DATE_TRUNC('month', %s) - INTERVAL '12 months'
+        GROUP BY
+            s.doctor_employee_person_id,
+            surgery_month
+    ),
+    MaxSurgeryCounts AS (
+        SELECT
+            surgery_month,
+            MAX(surgery_count) AS max_surgery_count
+        FROM
+            SurgeryCounts
+        GROUP BY
+            surgery_month
+    )
+    SELECT
+        p.name AS doctor_name,
+        sc.surgery_month,
+        sc.surgery_count
+    FROM
+        SurgeryCounts sc
+    JOIN
+        MaxSurgeryCounts msc
+    ON
+        sc.surgery_month = msc.surgery_month
+        AND sc.surgery_count = msc.max_surgery_count
+    JOIN
+        doctor d
+    ON
+        sc.doctor_employee_person_id = d.employee_person_id
+    JOIN
+        employee e
+    ON
+        d.employee_person_id = e.person_id
+    JOIN
+        person p
+    ON
+        e.person_id = p.id
+    ORDER BY
+        sc.surgery_month;
+    """
+    values = (present_date,)
+    with db_con.cursor() as cursor:
+        cursor.execute(query, values)
+        top12 = cursor.fetchall()
+
+    if top12 is None:
+        raise ValueError("No doctors or surgeries found")
+
+    return [{
+        "month": top[1],
+        "doctor name": top[0],
+        "surgeries": top[2]
+        } for top in top12]
