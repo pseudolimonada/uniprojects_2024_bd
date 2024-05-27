@@ -10,7 +10,7 @@ STATUS_CODES = {
     'internal_error': 500
 }
 
-USER_DETAILS = ['username','password','name','address','cc_number','nif_number','birthdate']
+USER_DETAILS = ['username','password','name','address','cc_number','nif_number','birth_date']
 
 USER_TYPE_DETAILS = {
     'patient': ['medical_history'],
@@ -100,4 +100,4 @@ def get_dateobj_from_timestamp(timestamp_str: str):
     try:
         return datetime.datetime.strptime(timestamp_str, '%Y-%m-%d %H')
     except ValueError as e:
-        raise ValueError(f"Invalid timestamp string, must be in format %Y-%m-%d %H: {str(e)}")
+        raise ValueError(f"Invalid timestamp string: {str(e)}")

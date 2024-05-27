@@ -124,7 +124,7 @@ def schedule_appointment(login_id=None, login_types=None):
 
 
 
-@app.route('/dbproj/appointments/<patient_user_id>', methods=['GET'])
+@app.route('/dbproj/appointments/<int:patient_user_id>', methods=['GET'])
 @token_required
 @endpoint_error_handler
 def get_appointments(patient_user_id, login_id=None, login_types=None):
@@ -137,9 +137,10 @@ def get_appointments(patient_user_id, login_id=None, login_types=None):
     """
     #endpoint validation logic
     if 'patient' in login_types and login_id != patient_user_id and 'assistant' not in login_types:
+        print("AT GET APPOINTMENTS:", login_id, patient_user_id, login_id != patient_user_id)
         response = {'status': STATUS_CODES['api_error'], 'results': 'Patient credentials don\'t match patient id'}
         return flask.jsonify(response) 
-    elif 'assistant' not in login_types:
+    elif 'assistant' not in login_types and 'patient' not in login_types:
         response = {'status': STATUS_CODES['api_error'], 'results': 'Invalid credentials to access this endpoint'}
         return flask.jsonify(response)
 

@@ -428,8 +428,26 @@ def _create_hospitalization(db_con, start_date, end_date, patient_id, nurse_id):
     return event
 
 def _create_surgery(db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id):
-    pass
+    with db_con.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO surgery (start_date, end_date, patient_person_id, hospitalization_event_id, doctor_employee_person_id) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+            (start_date, end_date, patient_id, hospitalization_id, doctor_id)
+        )
 
+        surgery = cursor.fetchone()
+        if surgery is None:
+            raise ValueError('Error creating event')
+
+        data = [(surgery[0], nurse[0], nurse[1]) for nurse in nurses]
+        # Insert the new nurse appointments
+        cursor.executemany(
+            "INSERT INTO nurse_surgery (surgery_id, nurse_employee_person_id, role) VALUES (%s, %s, %s)",
+            data
+        )
+        # Commit the transaction
+        cursor.commit()
+
+    return surgery
 
 def get_prescriptions(db_con, patient_id) -> List[Dict]:
     query = """
@@ -507,9 +525,54 @@ def add_prescription(db_con, payload) -> int:
     return prescription_id
 
 
-def execute_payment(db_con, login_id, bill_id, payload):
-    pass
+def _check_bill(db_con, login_id, bill_id):
+    query = """
+        SELECT b.status
+        FROM bill b JOIN event e
+        ON b.event_id = e.id
+        WHERE b.id = %s
+        AND e.patient_person_id = %s;
+        """
+    values = (bill_id, login_id)
+    bill = _execute_query(db_con, query, values, fetch_id=True)
+    if bill is None:
+        raise ValueError('This bill is unavailable')
+    if bill[0] == 'paid':
+        raise ValueError('This bill has already been paid')
 
+def _pay_amount(db_con, bill_id, amount):
+    with db_con.cursor() as cursor:
+        query = """
+            UPDATE bill
+            SET amount = amount - %s,
+                status = CASE WHEN amount - %s <= 0 THEN 'paid' ELSE status END
+            WHERE id = %s
+            RETURNING amount;
+        """
+        cursor.execute(query, (amount, amount, bill_id))
+
+        current_amount = cursor.fetchone()
+
+        if current_amount is None:
+            raise ValueError('Error paying bill')
+
+    db_con.commit()
+    return current_amount
+
+def execute_payment(db_con, login_id, bill_id, payload):
+    # needs to verify if bill's patient is the same as the login_id
+    #TODO: meter aqui o valor do pagamento da payload
+    paying_amount = float(payload['amount'])
+
+    _check_bill(db_con, login_id, bill_id)
+    current_amount = _pay_amount(db_con, bill_id, paying_amount)[0]
+
+    if current_amount == 0:
+        return f"Bill paid successfully."
+    elif current_amount < 0:
+        return f"Bill overpaid. Credited {current_amount} euro."
+    else:
+        return f"Bill partially paid. Remaining amount: {current_amount} euro."
 
 def get_top3_patients(db_con):
     pass

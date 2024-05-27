@@ -112,18 +112,16 @@ BEGIN
         bill_amount NUMERIC := 50.00;
     BEGIN
         INSERT INTO bill (amount, status, event_id)
-        VALUES (bill_amount, False, NEW.event_id);
-
-        RETURN NEW;
+        VALUES (bill_amount, 'open', NEW.event_id);
+		RETURN NEW;
     EXCEPTION
         WHEN OTHERS THEN
-            RAISE NOTICE 'Error creating bill: %', SQLERRM;
-            RETURN NEW;
+            RAISE EXCEPTION 'Error creating bill: %', SQLERRM;
     END;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER _create_bill_from_appointment_trigger
+CREATE OR REPLACE TRIGGER _create_bill_from_appointment_trigger
 AFTER INSERT ON appointment
 FOR EACH ROW
 EXECUTE FUNCTION _create_bill_from_appointment();
@@ -136,18 +134,16 @@ BEGIN
         bill_amount NUMERIC := 0.00;
     BEGIN
         INSERT INTO bill (amount, status, event_id)
-        VALUES (bill_amount, False, NEW.event_id);
-
-        RETURN NEW;
+        VALUES (bill_amount, 'open', NEW.event_id);
+		RETURN NEW;
     EXCEPTION
         WHEN OTHERS THEN
-            RAISE NOTICE 'Error creating bill: %', SQLERRM;
-            RETURN NEW;
+            RAISE EXCEPTION 'Error creating bill: %', SQLERRM;
     END;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER _create_bill_from_hospitalization_trigger
+CREATE OR REPLACE TRIGGER _create_bill_from_hospitalization_trigger
 AFTER INSERT ON hospitalization
 FOR EACH ROW
 EXECUTE FUNCTION _create_bill_from_hospitalization();
@@ -158,10 +154,14 @@ RETURNS trigger AS $$
 BEGIN
     UPDATE bill SET amount = 200.00 WHERE event_id = NEW.hospitalization_event_id;
     RETURN NEW;
+	IF NOT FOUND THEN
+        RAISE EXCEPTION 'No bill updated';
+    END IF;
 END;
+
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER _update_bill_trigger
+CREATE OR REPLACE TRIGGER _update_bill_trigger
 AFTER INSERT ON surgery
 FOR EACH ROW
 EXECUTE FUNCTION _update_bill();
