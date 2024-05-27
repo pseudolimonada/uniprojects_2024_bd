@@ -1,6 +1,7 @@
 import sys
 import hashlib
 import datetime
+import calendar
 
 import psycopg2
 from psycopg2 import pool
@@ -383,7 +384,7 @@ def schedule_surgery(db_con, payload, hospitalization_id, login_id) -> Dict:
     
     # create hospitalization or validate it
     if hospitalization_id is None:
-        hosp_duration = payload['duration']
+        hosp_duration = payload['hospitalization_duration']
         hosp_end_date = start_date + datetime.timedelta(days=hosp_duration)
         hosp_nurse_id = payload['hospitalization_nurse_id']
 
@@ -589,8 +590,59 @@ def execute_payment(db_con, login_id, bill_id, payload):
         return f"Bill partially paid. Remaining amount: {current_amount} euro."
 
 def get_top3_patients(db_con):
-    pass
+    now = datetime.datetime.now()
+    start_date = datetime.datetime(now.year, now.month, 1)
+    end_date = datetime.datetime(now.year, now.month, calendar.monthrange(now.year, now.month)[1])
 
+    query = """
+    SELECT 
+    p.name AS patient_name,
+    SUM(b.amount) AS total_spent,
+    json_agg(DISTINCT procedures.*) AS procedures
+    FROM patient pt
+    JOIN person p ON pt.person_id = p.id
+    JOIN event e ON e.patient_person_id = pt.person_id
+    JOIN bill b ON b.event_id = e.id,
+        LATERAL (
+            SELECT 
+                'appointment' AS procedure_type,
+                a.event_id AS procedure_id,
+                a.doctor_employee_person_id AS doctor_id,
+                e.start_date AS date
+            FROM appointment a
+            WHERE a.event_id = e.id
+
+            UNION ALL
+
+            SELECT
+                'surgery' AS procedure_type,
+                s.id AS procedure_id,
+                s.doctor_employee_person_id AS doctor_id,
+                s.start_date AS date
+            FROM surgery s 
+            JOIN event esub ON s.hospitalization_event_id = esub.id
+            WHERE s.start_date >= %s AND s.end_date <= %s
+            AND esub.patient_person_id = pt.person_id
+        ) AS procedures
+        
+    WHERE e.start_date >= %s AND e.end_date <= %s
+    GROUP BY p.id
+    ORDER BY total_spent DESC
+    LIMIT 3;
+    """
+    values = (start_date, end_date, start_date, end_date)
+    with db_con.cursor() as cursor:
+        cursor.execute(query, values)
+        patients = cursor.fetchall()
+
+    if patients is None:
+        raise ValueError("No patients found")
+    
+    return [{
+        "patient_name": patient[0],
+        "total_spent": patient[1],
+        "procedures": patient[2]
+    } for patient in patients]
 
 def get_daily_summary(db_con, date):
     pass
