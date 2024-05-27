@@ -1,4 +1,4 @@
-from src.utils import USER_DETAILS, USER_TYPE_DETAILS, APPOINTMENT_DETAILS, SURGERY_DETAILS, PRESCRIPTION_DETAILS, PRESCRIPTION_MED_DETAILS, PAYMENT_DETAILS
+from src.utils import USER_DETAILS, USER_TYPE_DETAILS, APPOINTMENT_DETAILS, HOSPITALIZATION_DETAILS, SURGERY_DETAILS, PRESCRIPTION_DETAILS, PRESCRIPTION_MED_DETAILS, PAYMENT_DETAILS
 
 def user_type(user_type: str):
     for user in USER_TYPE_DETAILS.keys():
@@ -43,7 +43,7 @@ def appointment_details(payload: dict):
     if len(missing_args) != 0:
         raise ValueError(f"Missing arguments: {', '.join(missing_args)}")
 
-def surgery_details(payload: dict):
+def surgery_details(payload: dict, hospitalization_id):
     nurses = payload['nurses']
 
     if type(nurses) != list or len(nurses) == 0:
@@ -58,6 +58,11 @@ def surgery_details(payload: dict):
     for surgery_detail in SURGERY_DETAILS:
         if surgery_detail not in payload:
             missing_args.append(surgery_detail)
+
+    if hospitalization_id is None:
+        for hospitalization_detail in HOSPITALIZATION_DETAILS:
+            if hospitalization_detail not in payload:
+                missing_args.append(hospitalization_detail)
 
     if len(missing_args) != 0:
         raise ValueError(f"Missing arguments: {', '.join(missing_args)}")

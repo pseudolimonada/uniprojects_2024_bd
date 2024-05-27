@@ -181,7 +181,7 @@ def schedule_surgery(hospitalization_id=None, login_id=None, login_types=None):
     payload = flask.request.get_json()
     logger.info('POST /dbproj/surgery')
     logger.debug(f'POST /dbproj/surgery - payload received: {payload}')
-    validator.surgery_details(payload) # check if payload has patient_id, doctor, nurses, date
+    validator.surgery_details(payload, hospitalization_id) # check if payload has patient_id, doctor, nurses, date
 
     #surgery schedule logic
     result: Dict = db.schedule_surgery(flask.g.db_con, payload, hospitalization_id, login_id) #dict with hospitalization, surgery, patient and doctor id, and date

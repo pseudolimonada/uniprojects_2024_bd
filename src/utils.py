@@ -21,7 +21,9 @@ USER_TYPE_DETAILS = {
 
 APPOINTMENT_DETAILS = ['doctor_id','date','nurses'] #nurses is a list of lists with id and role
 
-SURGERY_DETAILS = ['doctor_id','date','nurses','hospitalization_duration', 'hospitalization_nurse_id'] #head nurse
+HOSPITALIZATION_DETAILS = ['hospitalization_duration', 'hospitalization_nurse_id']
+
+SURGERY_DETAILS = ['doctor_id','date','nurses'] #head nurse
 
 PRESCRIPTION_DETAILS = ['type','event_id','validity','medicines']
 

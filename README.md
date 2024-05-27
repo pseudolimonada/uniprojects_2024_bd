@@ -152,7 +152,7 @@ EXECUTE FUNCTION _create_bill_from_hospitalization();
 CREATE OR REPLACE FUNCTION _update_bill()
 RETURNS trigger AS $$
 BEGIN
-    UPDATE bill SET amount = 200.00 WHERE event_id = NEW.hospitalization_event_id;
+    UPDATE bill SET amount = amount + 200.00 WHERE event_id = NEW.hospitalization_event_id;
     RETURN NEW;
 	IF NOT FOUND THEN
         RAISE EXCEPTION 'No bill updated';

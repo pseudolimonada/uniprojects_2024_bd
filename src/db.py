@@ -252,7 +252,7 @@ def _check_nurses(db_con, nurse_ids, start_date, end_date):
         if len(free_nurses) < len(nurse_ids):
             raise ValueError('Not enough nurses available for the given date')
   
-        return nurse_ids
+        return [nurse[0] for nurse in free_nurses]
 
 def _check_doctor(db_con, doctor_id , start_date, end_date):
     # Retrieve an available doctor
@@ -270,8 +270,7 @@ def _check_doctor(db_con, doctor_id , start_date, end_date):
 
         SELECT DISTINCT s.doctor_employee_person_id
         FROM surgery s
-        JOIN event e ON s.hospitalization_event_id = e.id
-        WHERE e.start_date < %s AND e.end_date > %s
+        WHERE s.start_date < %s AND s.end_date > %s
 
         UNION ALL
 
@@ -287,7 +286,7 @@ def _check_doctor(db_con, doctor_id , start_date, end_date):
     if doctor is None:
         raise ValueError(f'Doctor is not available for the given date')
 
-    return doctor
+    return doctor[0]
 
 def _check_patient(db_con, patient_id, start_date, end_date):
     # Retrieve an available patient
@@ -298,11 +297,19 @@ def _check_patient(db_con, patient_id, start_date, end_date):
     AND p.person_id  NOT IN (
         SELECT DISTINCT e.patient_person_id
         FROM event e
+        JOIN appointment a ON e.id = a.event_id
         WHERE e.start_date < %s AND e.end_date > %s
+
+        UNION ALL
+
+        SELECT DISTINCT e.patient_person_id
+        FROM event e
+        JOIN surgery s ON e.id = s.hospitalization_event_id
+        WHERE s.start_date < %s AND s.end_date > %s
     )
     LIMIT 1;
     """
-    values = (patient_id, end_date, start_date)
+    values = (patient_id, end_date, start_date, end_date, start_date)
     patient = _execute_query(db_con, query, values, fetch_id=True)
 
     if patient is None:
@@ -325,17 +332,14 @@ def schedule_appointment(db_con, payload, patient_id) -> int:
     if patient_id in nurse_ids or patient_id == doctor_id:
         raise ValueError('Cannot schedule an appointment with yourself')
 
-    free_doctor = _check_doctor(db_con, doctor_id, start_date, end_date)
-    free_nurses = _check_nurses(db_con, nurse_ids, start_date, end_date)
-    free_patient = _check_patient(db_con, patient_id, start_date, end_date)
+    doctor_id = _check_doctor(db_con, doctor_id, start_date, end_date)
+    nurse_ids = _check_nurses(db_con, nurse_ids, start_date, end_date)
+    patient_id = _check_patient(db_con, patient_id, start_date, end_date)
 
     # Create appointment
-    event = _create_appointment(db_con, start_date, end_date, patient_id, doctor_id , nurses)
-
-    if event is None:
-        raise ValueError('Error scheduling appointment')
-
-    return event[0]
+    event_id = _create_appointment(db_con, start_date, end_date, patient_id, doctor_id , nurses)
+    db_con.commit() # commit the transaction
+    return event_id
 
 def _create_appointment(db_con, start_date, end_date, patient_id, doctor_id, nurses):
     with db_con.cursor() as cursor:
@@ -358,8 +362,6 @@ def _create_appointment(db_con, start_date, end_date, patient_id, doctor_id, nur
             data
         )
 
-        db_con.commit() # commit the transaction
-
     if event is None:
         raise ValueError('Error creating event')
     
@@ -370,41 +372,57 @@ def schedule_surgery(db_con, payload, hospitalization_id, login_id) -> Dict:
     start_date = get_dateobj_from_timestamp(payload['date'])
     end_date = start_date + datetime.timedelta(hours=1)
     patient_id = payload['patient_id'] 
-
-    if patient_id == login_id:
-        raise ValueError('Cannot schedule surgery for yourself')
-
-    if start_date < datetime.datetime.now():
-        raise ValueError('Stop there time traveler!')
-    
-    if hospitalization_id is None:
-        end_date_hosp = start_date + datetime.timedelta(days=payload['hospitalization_duration'])
-        hospitalization_nurse_id = payload['hospitalization_nurse_id']
-
-        event = _create_hospitalization(
-            db_con, start_date, end_date_hosp, patient_id, hospitalization_nurse_id)
-        
-        if event is None:
-            raise ValueError('Error creating hospitalization')
-        
-        hospitalization_id = event[0]
-
-    doctor_id = payload['doctor_id']
+    doctor_id = payload['doctor_id']    
     nurses:List[List] = payload['nurses']
     nurse_ids = [nurse[0] for nurse in nurses]
 
-    # create surgery
+    if patient_id == login_id:
+        raise ValueError('Cannot schedule surgery for yourself')
+    if start_date < datetime.datetime.now():
+        raise ValueError('Stop there time traveler!')
+    
+    # create hospitalization or validate it
+    if hospitalization_id is None:
+        hosp_duration = payload['duration']
+        hosp_end_date = start_date + datetime.timedelta(days=hosp_duration)
+        hosp_nurse_id = payload['hospitalization_nurse_id']
+
+        #confirm entities are available
+        _check_nurses(db_con, [hosp_nurse_id], start_date, hosp_end_date)
+        _check_patient(db_con, patient_id, start_date, hosp_end_date)
+
+        hospitalization_id = _create_hospitalization(
+            db_con, start_date, hosp_end_date, patient_id, hosp_nurse_id)
+    else:
+        _check_hospitalization(db_con, hospitalization_id, start_date, end_date)
+
+    # confirm entities are available
     free_nurses = _check_nurses(db_con, nurse_ids, start_date, end_date)
     free_doctor = _check_doctor(db_con, doctor_id, start_date, end_date)
     free_patient = _check_patient(db_con, patient_id, start_date, end_date)
 
-    surgery = _create_surgery(
-        db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id)
-
-    if surgery is None:
-        raise ValueError('Error scheduling surgery')
+    surgery_id = _create_surgery(
+        db_con, start_date, end_date, doctor_id, nurses, hospitalization_id)
     
-    return hospitalization_id, surgery[0]
+    db_con.commit() # commit the transaction at the end
+
+    return hospitalization_id, surgery_id
+
+def _check_hospitalization(db_con, hospitalization_id, start_date, end_date):
+    query = """
+    SELECT h.event_id
+    FROM hospitalization h
+    JOIN event e ON h.event_id = e.id
+    WHERE h.event_id = %s
+    AND e.start_date < %s AND e.end_date > %s
+    """
+    values = (hospitalization_id, end_date, start_date)
+    hospitalization = _execute_query(db_con, query, values, fetch_id=True)
+
+    if hospitalization is None:
+        raise ValueError('This hospitalization is unavailable')
+    
+    return hospitalization[0]
 
 def _create_hospitalization(db_con, start_date, end_date, patient_id, nurse_id):
     with db_con.cursor() as cursor:
@@ -420,18 +438,16 @@ def _create_hospitalization(db_con, start_date, end_date, patient_id, nurse_id):
             (event, nurse_id)
         )
 
-        db_con.commit()
-
     if event is None:
         raise ValueError('Error creating event')
     
-    return event
+    return event[0]
 
-def _create_surgery(db_con, start_date, end_date, patient_id, doctor_id, nurses, hospitalization_id):
+def _create_surgery(db_con, start_date, end_date, doctor_id, nurses, hospitalization_id):
     with db_con.cursor() as cursor:
         cursor.execute(
-            "INSERT INTO surgery (start_date, end_date, patient_person_id, hospitalization_event_id, doctor_employee_person_id) VALUES (%s, %s, %s, %s, %s) RETURNING id",
-            (start_date, end_date, patient_id, hospitalization_id, doctor_id)
+            "INSERT INTO surgery (start_date, end_date, hospitalization_event_id, doctor_employee_person_id) VALUES (%s, %s, %s, %s) RETURNING id",
+            (start_date, end_date, hospitalization_id, doctor_id)
         )
 
         surgery = cursor.fetchone()
@@ -444,10 +460,8 @@ def _create_surgery(db_con, start_date, end_date, patient_id, doctor_id, nurses,
             "INSERT INTO nurse_surgery (surgery_id, nurse_employee_person_id, role) VALUES (%s, %s, %s)",
             data
         )
-        # Commit the transaction
-        cursor.commit()
 
-    return surgery
+    return surgery[0]
 
 def get_prescriptions(db_con, patient_id) -> List[Dict]:
     query = """
@@ -570,7 +584,7 @@ def execute_payment(db_con, login_id, bill_id, payload):
     if current_amount == 0:
         return f"Bill paid successfully."
     elif current_amount < 0:
-        return f"Bill overpaid. Credited {current_amount} euro."
+        return f"Bill overpaid. Credited {-current_amount} euro."
     else:
         return f"Bill partially paid. Remaining amount: {current_amount} euro."
 
