@@ -38,7 +38,7 @@ def token_required(f):
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             
-            kwargs['login_id'] = db.check_user(flask.g.db_con, data['login_id'])
+            kwargs['login_id'] = db.check_user_from_token(flask.g.db_con, data['login_id'])
             kwargs['login_types'] = data['login_types']
             print("AT DECODE:", kwargs['login_id'], kwargs['login_types'])
 
