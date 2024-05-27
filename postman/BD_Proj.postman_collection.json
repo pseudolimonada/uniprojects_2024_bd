@@ -7,7 +7,7 @@
 	},
 	"item": [
 		{
-			"name": "login",
+			"name": "login doctor",
 			"event": [
 				{
 					"listen": "test",
@@ -28,7 +28,109 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\"\n}",
+					"raw": "{\n\"username\": \"Dr.house123\",\n\"password\": \"securepassword123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/user",
+				"description": "This is a PUT request and it is used to overwrite an existing piece of data. For instance, after you create an entity with a POST request, you may want to modify that later. You can do that using a PUT request. You typically identify the entity being updated by including an identifier in the URL (eg. `id=1`).\n\nA successful PUT request typically returns a `200 OK`, `201 Created`, or `204 No Content` response code."
+			},
+			"response": []
+		},
+		{
+			"name": "login nurse",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful PUT request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\"username\": \"nursemimi\",\n\"password\": \"verysecurepassword\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/user",
+				"description": "This is a PUT request and it is used to overwrite an existing piece of data. For instance, after you create an entity with a POST request, you may want to modify that later. You can do that using a PUT request. You typically identify the entity being updated by including an identifier in the URL (eg. `id=1`).\n\nA successful PUT request typically returns a `200 OK`, `201 Created`, or `204 No Content` response code."
+			},
+			"response": []
+		},
+		{
+			"name": "login patient",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful PUT request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\"username\": \"janedoe4\",\n\"password\": \"anothersecurepassword\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://127.0.0.1:8080/dbproj/user",
+				"description": "This is a PUT request and it is used to overwrite an existing piece of data. For instance, after you create an entity with a POST request, you may want to modify that later. You can do that using a PUT request. You typically identify the entity being updated by including an identifier in the URL (eg. `id=1`).\n\nA successful PUT request typically returns a `200 OK`, `201 Created`, or `204 No Content` response code."
+			},
+			"response": []
+		},
+		{
+			"name": "login assistant",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful PUT request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\"username\": \"assistantmike2\",\n\"password\": \"supersecurepassword\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -47,7 +149,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\"username\": \"Dr.house123\",\n\"password\": \"securepassword123\",\n\"name\": \"Housewhatshisname\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Internal Medicine\"\n}",
+					"raw": "{\n\"username\": \"Dr.watson\",\n\"password\": \"securepassword123\",\n\"name\": \"Housewhatshisname\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Internal Medicine\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -65,14 +167,14 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\",\n\"name\": \"John Doe\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Cardiology\"\n}",
+					"raw": "{\n  \"username\": \"nursemimi4\",\n  \"password\": \"verysecurepassword\",\n  \"name\": \"Betty Nurse\",\n  \"address\": \"654 Maple St, Thiscity, USA\",\n  \"cc_number\": \"4111111111111115\",\n  \"nif_number\": 675849302,\n  \"birth_date\": \"1985-05-05\",\n  \"contract_details\": \"Part-time, started on 2018-09-10.\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
 						}
 					}
 				},
-				"url": "http://127.0.0.1:8080/dbproj/register/doctor"
+				"url": "http://127.0.0.1:8080/dbproj/register/nurse"
 			},
 			"response": []
 		},
@@ -83,14 +185,14 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\",\n\"name\": \"John Doe\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Cardiology\"\n}",
+					"raw": "{\n  \"username\": \"janedoe4\",\n  \"password\": \"anothersecurepassword\",\n  \"name\": \"Jane Doe\",\n  \"address\": \"456 Elm St, Othertown, USA\",\n  \"cc_number\": \"4111111111111112\",\n  \"nif_number\": 987654321,\n  \"birth_date\": \"1990-02-02\",\n  \"medical_history\": \"No known allergies. Previous surgery in 2010.\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
 						}
 					}
 				},
-				"url": "http://127.0.0.1:8080/dbproj/register/doctor"
+				"url": "http://127.0.0.1:8080/dbproj/register/patient"
 			},
 			"response": []
 		},
@@ -101,14 +203,14 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\"username\": \"johndoe1121\",\n\"password\": \"securepassword123\",\n\"name\": \"John Doe\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Cardiology\"\n}",
+					"raw": "{\n  \"username\": \"assistantmike2\",\n  \"password\": \"supersecurepassword\",\n  \"name\": \"Mike Assistant\",\n  \"address\": \"987 Birch St, Thatcity, USA\",\n  \"cc_number\": \"4111111111111116\",\n  \"nif_number\": 384756291,\n  \"birth_date\": \"1995-06-06\",\n  \"contract_details\": \"Full-time, started on 2019-11-20.\",\n  \"certification_details\": \"Certified Medical Assistant, completed in 2019.\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
 						}
 					}
 				},
-				"url": "http://127.0.0.1:8080/dbproj/register/doctor"
+				"url": "http://127.0.0.1:8080/dbproj/register/assistant"
 			},
 			"response": []
 		},
@@ -131,12 +233,12 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MywibG9naW5fdHlwZXMiOlsicGF0aWVudCJdLCJleHAiOjE3MTkyNzIzODN9.iWy-RMn16W9_M6lzN-bxmpM1dKnkYxrgZ-P3LLkfx04"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"doctor_id\": \"doctor_user_id\",\n    \"date\": \"date\"\n}",
+					"raw": "{\n    \"doctor_id\": \"6\",\n    \"date\": \"2024-05-26 23\",\n    \"nurses\": [\n        [\"7\", \"anestesia\"],\n        [\"8\", \"geral\"]\n    ]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -169,7 +271,7 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NCwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTI3MjQwOH0.4-GmRhYWNaiFtMzTTHoXU82dr9iQsEYAWPkStTXVCG0"
 					}
 				],
 				"body": {
@@ -181,7 +283,7 @@
 						}
 					}
 				},
-				"url": "http://127.0.0.1:8080/dbproj/appointments/2"
+				"url": "http://127.0.0.1:8080/dbproj/appointments/3"
 			},
 			"response": []
 		},
@@ -204,12 +306,12 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NCwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTI3MjQwOH0.4-GmRhYWNaiFtMzTTHoXU82dr9iQsEYAWPkStTXVCG0"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"patient_id\": \"patient_user_id\",\n    \"doctor\": \"doctor_user_id\",\n    \"nurses\": [\n        [\"nurse_user_id1\", \"role1\"],\n        [\"nurse_user_id2\", \"role2\"]\n    ],\n    \"date\": \"date\"\n}",
+					"raw": "{\n    \"patient_id\": 10,\n    \"doctor_id\": 11,\n    \"date\": \"date\",\n    \"nurses\": [\n        [\"nurse_user_id1\", \"role1\"],\n        [\"nurse_user_id2\", \"role2\"]\n    ],\n    \"hospitalization_duration\": \"5\",\n    \"hospitalization_nurse_id\": 12\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -239,12 +341,12 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MTIsImxvZ2luX3R5cGVzIjpbImFzc2lzdGFudCJdLCJleHAiOjE3MTkxNzY4MTJ9.oc6H9EU1f6zG7DOOfdWdVDBYqvO4ddgnBdHNJMamURI"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NCwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTI3MjQwOH0.4-GmRhYWNaiFtMzTTHoXU82dr9iQsEYAWPkStTXVCG0"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"patient_id\": \"patient_user_id\",\n    \"doctor\": \"doctor_user_id\",\n    \"nurses\": [\n        [\"nurse_user_id1\", \"role1\"],\n        [\"nurse_user_id2\", \"role2\"]\n    ],\n    \"date\": \"date\"\n}",
+					"raw": "{\n    \"patient_id\": 3,\n    \"doctor_id\": 1,\n    \"nurses\": [\n        [\"2\", \"special role\"]\n    ],\n    \"date\": \"date\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -274,7 +376,7 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NCwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTI3MjQwOH0.4-GmRhYWNaiFtMzTTHoXU82dr9iQsEYAWPkStTXVCG0"
 					}
 				],
 				"url": "http://127.0.0.1:8080/dbproj/prescriptions/10"
@@ -300,12 +402,12 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTI3MjMzNn0.IJvV_FL3dxRLLCN8hg6e8kXagsjg5qpezYWbD3e6gMo"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"type\": \"hospitalization/appointment\",\n    \"event_id\": \"id\",\n    \"validity\": \"date\",\n    \"medicines\": [\n        {\n            \"medicine\": \"medicine1_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        },\n        {\n            \"medicine\": \"medicine2_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        },\n        {\n            \"medicine\": \"medicine3_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        }\n    ]\n}",
+					"raw": "{\n    \"type\": \"appointment\",\n    \"event_id\": \"2\",\n    \"validity\": \"2024-05-27\",\n    \"medicines\": [\n        {\n            \"medicine\": \"Aspirin\",\n            \"posology_dose\": \"2 500mg pills\",\n            \"posology_frequency\": \"3 times a week\"\n        },\n        {\n            \"medicine\": \"Ibuprofen\",\n            \"posology_dose\": \"1 400mg pill\",\n            \"posology_frequency\": \"every 6 hours\"\n        },\n        {\n            \"medicine\": \"Acetaminophen\",\n            \"posology_dose\": \"1 500mg pill\",\n            \"posology_frequency\": \"every 4-6 hours as needed\"\n        }\n    ]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -335,19 +437,19 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MywibG9naW5fdHlwZXMiOlsicGF0aWVudCJdLCJleHAiOjE3MTkyNzIzODN9.iWy-RMn16W9_M6lzN-bxmpM1dKnkYxrgZ-P3LLkfx04"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"type\": \"hospitalization/appointment\",\n    \"event_id\": \"id\",\n    \"validity\": \"date\",\n    \"medicines\": [\n        {\n            \"medicine\": \"medicine1_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        },\n        {\n            \"medicine\": \"medicine2_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        },\n        {\n            \"medicine\": \"medicine3_name\",\n            \"posology_dose\": \"value\",\n            \"posology_frequency\": \"value\"\n        }\n    ]\n}",
+					"raw": "{\n    \"amount\": \"value\",\n    \"payment_method\": \"value\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
 						}
 					}
 				},
-				"url": "http://127.0.0.1:8080/dbproj/prescription/"
+				"url": "http://127.0.0.1:8080/dbproj/bills/2"
 			},
 			"response": []
 		},
@@ -370,7 +472,7 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MTIsImxvZ2luX3R5cGVzIjpbImFzc2lzdGFudCJdLCJleHAiOjE3MTkxNzY4MTJ9.oc6H9EU1f6zG7DOOfdWdVDBYqvO4ddgnBdHNJMamURI"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NCwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTI3MjQwOH0.4-GmRhYWNaiFtMzTTHoXU82dr9iQsEYAWPkStTXVCG0"
 					}
 				],
 				"url": "http://127.0.0.1:8080/dbproj/top3"
@@ -396,7 +498,7 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MTIsImxvZ2luX3R5cGVzIjpbImFzc2lzdGFudCJdLCJleHAiOjE3MTkxNzY4MTJ9.oc6H9EU1f6zG7DOOfdWdVDBYqvO4ddgnBdHNJMamURI"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NCwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTI3MjQwOH0.4-GmRhYWNaiFtMzTTHoXU82dr9iQsEYAWPkStTXVCG0"
 					}
 				],
 				"url": "http://127.0.0.1:8080/dbproj/daily/2024-05-24"
@@ -422,7 +524,7 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTEwMDA0NX0.ZAHTQ1xQPrZQH3AlIKC9oh3q-Q8YG0Fzi5z50InF2Y4"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NCwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTI3MjQwOH0.4-GmRhYWNaiFtMzTTHoXU82dr9iQsEYAWPkStTXVCG0"
 					}
 				],
 				"url": "http://127.0.0.1:8080/dbproj/report"
