@@ -320,7 +320,7 @@ def list_top3_patients(login_id=None, login_types=None):
 
 
 
-@app.route('/dbproj/daily/<year>-<month>-<day>', methods=['GET'])
+@app.route('/dbproj/daily/<int:year>-<int:month>-<int:day>', methods=['GET'])
 @token_required
 @endpoint_error_handler
 def daily_summary(year, month, day, login_id=None, login_types=None):

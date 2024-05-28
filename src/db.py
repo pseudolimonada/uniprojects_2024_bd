@@ -663,16 +663,35 @@ def get_top3_patients(db_con, cursor=None):
 
 @transactional
 def get_daily_summary(db_con, date, cursor=None):
-    #daily summary for all hospitalizations
-    #surgeries, payments, prescriptions
-    now = datetime.datetime.now()
-    start_date = datetime.datetime(now.year, now.month, 1)
-    end_date = datetime.datetime(now.year, now.month, 2)
-
     query = """
-        SELECT
-        
+    SELECT
+        COUNT(DISTINCT e.id) AS hospitalizations,
+        COUNT(DISTINCT s.id) AS surgeries,
+        COUNT(DISTINCT p.id) AS prescriptions,
+        COALESCE(SUM(payment.amount), 0) AS total_revenue
+    
+    FROM hospitalization h 
+    JOIN event e ON h.event_id = e.id 
+    JOIN surgery s ON s.hospitalization_event_id = e.id AND DATE(s.start_date) = DATE(%s)
+    JOIN prescription p ON p.event_id = e.id
+    JOIN bill b ON b.event_id = e.id
+    JOIN payment ON payment.bill_id = b.id
+    WHERE DATE(e.start_date) <= DATE(%s) AND DATE(e.end_date) >= DATE(%s);
     """
+
+    cursor.execute(query, (date, date, date))
+    summary = cursor.fetchone()
+
+    if summary is None:
+        raise ValueError("No data found for this date")
+    
+    return {
+        "hospitalizations": summary[0],
+        "surgeries": summary[1],
+        "prescriptions": summary[2],
+        "amount spent": summary[3]
+    }
+
 
 @transactional
 def generate_monthly_report(db_con, cursor=None):
