@@ -133,7 +133,10 @@ def register_user(db_con, user_type, payload, cursor=None) -> int:
         logger.info('Registering employee')
         _register_employee(user_type, user_id, payload, cursor=cursor)
 
-    return user_id
+    return {
+        "user_id": user_id,
+        "user_type": user_type
+    }
 
 def _register_patient(user_id, payload, cursor=None):
     query = _build_insert_query('patient', ['medical_history', 'person_id'])
@@ -338,7 +341,11 @@ def schedule_appointment(db_con, payload, patient_id, cursor=None) -> int:
 
     # Create appointment
     event_id = _create_appointment(start_date, end_date, patient_id, doctor_id , nurses, cursor=cursor)
-    return event_id
+    return {
+        "appointment_id": event_id,
+        "patient_id": patient_id,
+        "doctor_id": doctor_id
+    }
 
 def _create_appointment(start_date, end_date, patient_id, doctor_id, nurses, cursor=None):
     cursor.execute(
@@ -402,7 +409,12 @@ def schedule_surgery(db_con, payload, hospitalization_id, login_id, cursor=None)
     surgery_id = _create_surgery(
         start_date, end_date, doctor_id, nurses, hospitalization_id, cursor=cursor)
 
-    return hospitalization_id, surgery_id
+    return {
+        "hospitalization_id": hospitalization_id,
+        "surgery_id": surgery_id,
+        "patient_id": patient_id,
+        "doctor_id": doctor_id
+    }
 
 def _check_hospitalization(hospitalization_id, start_date, end_date, cursor=None):
     query = """
@@ -527,7 +539,10 @@ def add_prescription(db_con, payload, cursor=None) -> int:
     cursor.executemany(query, values)
     #could add a select count to validate medicines being added before committing, but seems pedantic
     
-    return prescription_id
+    return {
+        "prescription_id": prescription_id,
+        "event_id": event_id
+    }
 
 def _check_bill(login_id, bill_id, cursor=None):
     query = """
