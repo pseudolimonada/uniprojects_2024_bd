@@ -7,7 +7,7 @@ import psycopg2
 from psycopg2 import pool
 from typing import List, Dict
 
-from src.utils import config, logger, get_date_from_dateobj, get_timestamp_from_dateobj, get_dateobj_from_date, get_dateobj_from_timestamp
+from src.utils import config, logger, get_dateobj_from_timestamp, get_dateobj_from_date
 
 # creates a pool of connections to the database (being opened/closed implicitly in all endpoints, setup in api.py)
 db_pool = pool.SimpleConnectionPool(
@@ -178,7 +178,11 @@ def _register_assistant(user_id, payload, cursor=None):
 @transactional
 def get_user_appointments(db_con, patient_user_id, cursor=None) -> List[Dict]:
     query = """
-    SELECT DISTINCT e.id, d.employee_person_id, p.name, e.start_date
+    SELECT DISTINCT 
+        e.id,
+        d.employee_person_id,
+        p.name,
+        TO_CHAR(e.start_date, 'YYYY-MM-DD HH24:MI')
     FROM event e
     JOIN appointment a ON e.id = a.event_id
     JOIN doctor d ON a.doctor_employee_person_id = d.employee_person_id
@@ -197,7 +201,7 @@ def get_user_appointments(db_con, patient_user_id, cursor=None) -> List[Dict]:
         "appointment_id": appointment[0],
         "doctor_id": appointment[1],
         "doctor_name": appointment[2],
-        "date": get_timestamp_from_dateobj(appointment[3]),
+        "date": appointment[3],
     } for appointment in appointments]
 
 def _check_nurses(nurse_ids, start_date, end_date, cursor=None):
@@ -459,7 +463,7 @@ def get_prescriptions(db_con, patient_id, cursor=None) -> List[Dict]:
     query = """
     SELECT 
     p.id,
-    p.validity,
+    TO_CHAR(p.validity, 'YYYY-MM-DD'),
     json_agg(
         json_build_object(
             'medication_id', m.id,
@@ -485,7 +489,7 @@ def get_prescriptions(db_con, patient_id, cursor=None) -> List[Dict]:
     
     return [{
         "prescription_id": prescription[0],
-        "validity": get_date_from_dateobj(prescription[1]),
+        "validity": prescription[1],
         "posology": prescription[2]
     } for prescription in prescriptions]
 
@@ -493,7 +497,7 @@ def get_prescriptions(db_con, patient_id, cursor=None) -> List[Dict]:
 def add_prescription(db_con, payload, cursor=None) -> int:
     type = payload['type']
     event_id = payload['event_id']
-    validity = payload['validity']
+    validity = get_dateobj_from_date(payload['validity'])
 
     cursor.execute(
         f"SELECT 1 FROM {type} WHERE event_id = %s",

@@ -80,17 +80,17 @@ def load_config() -> dict:
 
 config = load_config()
 
-def get_date_from_dateobj(date: datetime.date):
-    try:
-        return date.strftime('%Y-%m-%d')
-    except AttributeError as e:
-        raise ValueError(f"Invalid date object: {str(e)}")
+# def get_date_from_dateobj(date: datetime.date):
+#     try:
+#         return date.strftime('%Y-%m-%d')
+#     except AttributeError as e:
+#         raise ValueError(f"Invalid date object: {str(e)}")
 
-def get_timestamp_from_dateobj(timestamp: datetime.datetime):
-    try:
-        return timestamp.strftime('%Y-%m-%d %Hh')
-    except AttributeError as e:
-        raise ValueError(f"Invalid timestamp object: {str(e)}")
+# def get_timestamp_from_dateobj(timestamp: datetime.datetime):
+#     try:
+#         return timestamp.strftime('%Y-%m-%d %Hh')
+#     except AttributeError as e:
+#         raise ValueError(f"Invalid timestamp object: {str(e)}")
 
 def get_dateobj_from_date(date_str: str):
     try:
@@ -100,6 +100,6 @@ def get_dateobj_from_date(date_str: str):
 
 def get_dateobj_from_timestamp(timestamp_str: str):
     try:
-        return datetime.datetime.strptime(timestamp_str, '%Y-%m-%d %H')
+        return datetime.datetime.strptime(timestamp_str, '%Y-%m-%d %Hh')
     except ValueError as e:
         raise ValueError(f"Invalid timestamp string: {str(e)}")

@@ -149,7 +149,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\"username\": \"Dr.watson\",\n\"password\": \"securepassword123\",\n\"name\": \"Housewhatshisname\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Internal Medicine\"\n}",
+					"raw": "{\n\"username\": \"Dr.watson3\",\n\"password\": \"securepassword123\",\n\"name\": \"Housewhatshisname\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Internal Medicine\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -233,12 +233,12 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MywibG9naW5fdHlwZXMiOlsicGF0aWVudCJdLCJleHAiOjE3MTkyNzIzODN9.iWy-RMn16W9_M6lzN-bxmpM1dKnkYxrgZ-P3LLkfx04"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6OCwibG9naW5fdHlwZXMiOlsicGF0aWVudCJdLCJleHAiOjE3MTk0NDg1NDN9.nN5t5k-11hd1TuuSHy1OMw586BTr1YstJ1-gC7q-K8g"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"doctor_id\": \"6\",\n    \"date\": \"2024-05-26 23\",\n    \"nurses\": [\n        [\"7\", \"anestesia\"],\n        [\"8\", \"geral\"]\n    ]\n}",
+					"raw": "{\n    \"doctor_id\": \"11\",\n    \"date\": \"2024-06-01 3h\",\n    \"nurses\": [\n        [\"12\", \"anestesia\"]\n    ]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -306,12 +306,12 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NCwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTI3MjQwOH0.4-GmRhYWNaiFtMzTTHoXU82dr9iQsEYAWPkStTXVCG0"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6OSwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTQ0ODU3MX0.rEt4WKWZZy0wR5XQdz8LjePt37E1jIFAIsmPeO6aOus"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"patient_id\": 10,\n    \"doctor_id\": 11,\n    \"date\": \"date\",\n    \"nurses\": [\n        [\"nurse_user_id1\", \"role1\"],\n        [\"nurse_user_id2\", \"role2\"]\n    ],\n    \"hospitalization_duration\": \"5\",\n    \"hospitalization_nurse_id\": 12\n}",
+					"raw": "{\n    \"patient_id\": 8,\n    \"doctor_id\": 6,\n    \"date\": \"2024-07-4 5h\",\n    \"nurses\": [\n        [10, \"anesthesia\"]\n    ],\n    \"hospitalization_duration\": 5,\n    \"hospitalization_nurse_id\": 7\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -341,19 +341,19 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NCwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTI3MjQwOH0.4-GmRhYWNaiFtMzTTHoXU82dr9iQsEYAWPkStTXVCG0"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6OSwibG9naW5fdHlwZXMiOlsiYXNzaXN0YW50Il0sImV4cCI6MTcxOTQ0ODU3MX0.rEt4WKWZZy0wR5XQdz8LjePt37E1jIFAIsmPeO6aOus"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"patient_id\": 3,\n    \"doctor_id\": 1,\n    \"nurses\": [\n        [\"2\", \"special role\"]\n    ],\n    \"date\": \"date\"\n}",
+					"raw": "{\n    \"patient_id\": 8,\n    \"doctor_id\": 6,\n    \"nurses\": [\n        [\"10\", \"special role\"]\n    ],\n    \"date\": \"2024-05-28 8h\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
 						}
 					}
 				},
-				"url": "http://127.0.0.1:8080/dbproj/surgery/5"
+				"url": "http://127.0.0.1:8080/dbproj/surgery/6"
 			},
 			"response": []
 		},
@@ -402,12 +402,12 @@
 				"header": [
 					{
 						"key": "auth-token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6MSwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTI3MjMzNn0.IJvV_FL3dxRLLCN8hg6e8kXagsjg5qpezYWbD3e6gMo"
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbl9pZCI6NiwibG9naW5fdHlwZXMiOlsiZG9jdG9yIl0sImV4cCI6MTcxOTQ0ODQyOH0.LxUSupj3pewpugUBzWglwVL1_-6X3BV3pgA3LBWLgkk"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"type\": \"appointment\",\n    \"event_id\": \"2\",\n    \"validity\": \"2024-05-27\",\n    \"medicines\": [\n        {\n            \"medicine\": \"Aspirin\",\n            \"posology_dose\": \"2 500mg pills\",\n            \"posology_frequency\": \"3 times a week\"\n        },\n        {\n            \"medicine\": \"Ibuprofen\",\n            \"posology_dose\": \"1 400mg pill\",\n            \"posology_frequency\": \"every 6 hours\"\n        },\n        {\n            \"medicine\": \"Acetaminophen\",\n            \"posology_dose\": \"1 500mg pill\",\n            \"posology_frequency\": \"every 4-6 hours as needed\"\n        }\n    ]\n}",
+					"raw": "{\n    \"type\": \"appointment\",\n    \"event_id\": \"2\",\n    \"validity\": \"2024-05-30\",\n    \"medicines\": [\n        {\n            \"medicine\": \"Aspirin\",\n            \"posology_dose\": \"2 500mg pills\",\n            \"posology_frequency\": \"3 times a week\"\n        },\n        {\n            \"medicine\": \"Ibuprofen\",\n            \"posology_dose\": \"1 400mg pill\",\n            \"posology_frequency\": \"every 6 hours\"\n        },\n        {\n            \"medicine\": \"Acetaminophen\",\n            \"posology_dose\": \"1 500mg pill\",\n            \"posology_frequency\": \"every 4-6 hours as needed\"\n        }\n    ]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
