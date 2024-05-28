@@ -674,24 +674,26 @@ def get_daily_summary(db_con, date, cursor=None):
         (SELECT COUNT(DISTINCT s.id) 
             FROM surgery s 
             WHERE s.start_date >= %s AND s.start_date < %s) AS surgeries,
-        COUNT(DISTINCT p.id) AS prescriptions,
+        (SELECT COUNT(DISTINCT p.id)
+            FROM prescription p
+            JOIN event e ON p.event_id = e.id
+            WHERE e.start_date >= %s AND e.start_date < %s) AS prescriptions,
         COALESCE(SUM(payment.amount), 0) AS total_revenue
     
     FROM hospitalization h 
     JOIN event e ON h.event_id = e.id 
-    JOIN prescription p ON p.event_id = e.id
     JOIN bill b ON b.event_id = e.id
     JOIN payment ON payment.bill_id = b.id
     WHERE e.start_date >= %s AND e.start_date < %s;
     """
 
     #considering this query's requirements and the prolonged nature of hospitalizations,
-    # it might make sense to add a created_at column to payment/prescription like:
+    # it might have made sense to add a created_at column to payment/prescription like:
     # ALTER TABLE prescriptions
     # ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 
-    cursor.execute(query, (date, date_plus_one, date, date_plus_one))
+    cursor.execute(query, (date, date_plus_one, date, date_plus_one,date, date_plus_one))
     summary = cursor.fetchone()
 
     if summary is None or summary[0] == 0:
