@@ -367,9 +367,8 @@ def generate_monthly_report(login_id=None, login_types=None):
     logger.info('GET /dbproj/report')
 
     # monthly report logic
-    #monthly_report: List[Dict] = db.generate_monthly_report(flask.g.db_con)
-    #response = {'status': STATUS_CODES['success'], 'results': monthly_report}
-    response = {'status': STATUS_CODES['success'], 'results': "YA GOT IN FAM"} #debug
+    monthly_report: List[Dict] = db.generate_monthly_report(flask.g.db_con)
+    response = {'status': STATUS_CODES['success'], 'results': monthly_report}
 
     # response logging and return
     logger.debug(f'GET /dbproj/report - response: {response}')

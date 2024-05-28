@@ -22,6 +22,7 @@ def transactional(func):
         db_con = args[0]
         with db_con.cursor() as cursor:
             try:
+                db_con.autocommit = False
                 result = func(*args, **kwargs, cursor=cursor)
             except Exception as e:
                 db_con.rollback()
@@ -30,6 +31,8 @@ def transactional(func):
             else:
                 db_con.commit()
                 return result
+            finally:
+                db_con.autocommit = True
     return wrapper
 
 # util function to build an simple insert query with a list of fields
@@ -145,11 +148,11 @@ def _register_employee(user_type, user_id, payload, cursor=None):
     cursor.execute(query, values)
 
     if user_type == 'doctor':
-        _register_doctor(db_con, user_id, payload, cursor=cursor)
+        _register_doctor(user_id, payload, cursor=cursor)
     elif user_type == 'nurse':
-        _register_nurse(db_con, user_id, payload, cursor=cursor)
+        _register_nurse(user_id, payload, cursor=cursor)
     elif user_type == 'assistant':
-        _register_assistant(db_con, user_id, payload,cursor=cursor)
+        _register_assistant(user_id, payload,cursor=cursor)
 
 def _register_doctor(user_id, payload, cursor=None):
     query = """
@@ -561,7 +564,7 @@ def _pay_amount(bill_id, payment_amount, payment_method, cursor=None):
         FROM bill
         WHERE bill.id = %s;
     """
-    cursor.execute(query, (payment_amount, payment_amount, bill_id))
+    cursor.execute(query, (bill_id,))
 
     result = cursor.fetchone()
     if result is None:
@@ -588,50 +591,46 @@ def execute_payment(db_con, login_id, bill_id, payload, cursor=None):
 
 @transactional
 def get_top3_patients(db_con, cursor=None):
-    now = datetime.datetime.now()
-    start_date = datetime.datetime(now.year, now.month, 1)
-    end_date = datetime.datetime(now.year, now.month, calendar.monthrange(now.year, now.month)[1])
-
     query = """
+    WITH procedures AS (
+        SELECT 
+            'appointment' AS procedure_type,
+            a.event_id AS procedure_id,
+            a.doctor_employee_person_id AS doctor_id,
+            TO_CHAR(e.start_date, 'YYYY-MM-DD HH24:MI') AS date,
+            e.patient_person_id AS patient_id
+        FROM appointment a
+        JOIN event e ON a.event_id = e.id
+        WHERE e.start_date >= DATE_TRUNC('month', NOW()) AND e.end_date < DATE_TRUNC('month', NOW() + INTERVAL '1 month')
+
+        UNION ALL
+
+        SELECT
+            'surgery' AS procedure_type,
+            s.id AS procedure_id,
+            s.doctor_employee_person_id AS doctor_id,
+            TO_CHAR(s.start_date, 'YYYY-MM-DD HH24:MI') AS date,
+            esub.patient_person_id AS patient_id
+        FROM surgery s 
+        JOIN event esub ON s.hospitalization_event_id = esub.id
+        WHERE s.start_date >= DATE_TRUNC('month', NOW()) AND s.end_date < DATE_TRUNC('month', NOW() + INTERVAL '1 month')
+    )
     SELECT 
-    p.name AS patient_name,
-    COALESCE(SUM(payment.amount), 0) AS total_spent,
-    json_agg(DISTINCT procedures.*) AS procedures
+        p.name AS patient_name,
+        COALESCE(SUM(payment.amount), 0) AS total_spent,
+        json_agg(DISTINCT procedures.*) AS procedures
     FROM patient pt
     JOIN person p ON pt.person_id = p.id
     JOIN event e ON e.patient_person_id = pt.person_id
     JOIN bill b ON b.event_id = e.id
-    JOIN payment ON payment.bill_id = b.id,
-        LATERAL (
-            SELECT 
-                'appointment' AS procedure_type,
-                a.event_id AS procedure_id,
-                a.doctor_employee_person_id AS doctor_id,
-                e.start_date AS date
-            FROM appointment a
-            WHERE a.event_id = e.id
-
-            UNION ALL
-
-            SELECT
-                'surgery' AS procedure_type,
-                s.id AS procedure_id,
-                s.doctor_employee_person_id AS doctor_id,
-                s.start_date AS date
-            FROM surgery s 
-            JOIN event esub ON s.hospitalization_event_id = esub.id
-            WHERE s.start_date >= %s AND s.end_date <= %s
-            AND esub.patient_person_id = pt.person_id
-        ) AS procedures
-        
-    WHERE e.start_date >= %s AND e.end_date <= %s
+    JOIN payment ON payment.bill_id = b.id
+    JOIN procedures ON procedures.patient_id = pt.person_id
     GROUP BY p.id
     ORDER BY total_spent DESC
-    LIMIT 3;
+    LIMIT 3;  
     """
-    values = (start_date, end_date, start_date, end_date)
    
-    cursor.execute(query, values)
+    cursor.execute(query)
     patients = cursor.fetchall()
 
     if patients is None:
@@ -658,9 +657,6 @@ def get_daily_summary(db_con, date, cursor=None):
 
 @transactional
 def generate_monthly_report(db_con, cursor=None):
-    now = datetime.datetime.now()
-    present_date = datetime.datetime(now.year, now.month, 1)
-
     query = """
     WITH
     SurgeryCounts AS (
@@ -668,10 +664,8 @@ def generate_monthly_report(db_con, cursor=None):
             s.doctor_employee_person_id,
             DATE_TRUNC('month', s.start_date) AS surgery_month,
             COUNT(*) AS surgery_count
-        FROM
-            surgery s
-        WHERE
-            s.start_date >= DATE_TRUNC('month', %s) - INTERVAL '12 months'
+        FROM surgery s
+        WHERE s.start_date >= DATE_TRUNC('month', NOW()) - INTERVAL '12 months'
         GROUP BY
             s.doctor_employee_person_id,
             surgery_month
@@ -680,40 +674,27 @@ def generate_monthly_report(db_con, cursor=None):
         SELECT
             surgery_month,
             MAX(surgery_count) AS max_surgery_count
-        FROM
-            SurgeryCounts
+        FROM SurgeryCounts
         GROUP BY
             surgery_month
     )
     SELECT
         p.name AS doctor_name,
-        sc.surgery_month,
+        TO_CHAR(sc.surgery_month, 'YYYY-MM') AS date,
         sc.surgery_count
-    FROM
-        SurgeryCounts sc
-    JOIN
-        MaxSurgeryCounts msc
-    ON
-        sc.surgery_month = msc.surgery_month
-        AND sc.surgery_count = msc.max_surgery_count
-    JOIN
-        doctor d
-    ON
-        sc.doctor_employee_person_id = d.employee_person_id
-    JOIN
-        employee e
-    ON
-        d.employee_person_id = e.person_id
-    JOIN
-        person p
-    ON
-        e.person_id = p.id
-    ORDER BY
-        sc.surgery_month;
-    """
-    values = (present_date,)
     
-    cursor.execute(query, values)
+    FROM SurgeryCounts sc
+    JOIN MaxSurgeryCounts msc
+    ON sc.surgery_month = msc.surgery_month
+    AND sc.surgery_count = msc.max_surgery_count
+    JOIN doctor d ON sc.doctor_employee_person_id = d.employee_person_id
+    JOIN employee e ON d.employee_person_id = e.person_id
+    JOIN person p ON e.person_id = p.id
+    
+    ORDER BY sc.surgery_month;
+    """
+
+    cursor.execute(query)
     top12 = cursor.fetchall()
 
     if top12 is None:

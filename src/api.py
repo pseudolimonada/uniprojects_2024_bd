@@ -40,7 +40,6 @@ def token_required(f):
             
             kwargs['login_id'] = db.check_user_from_token(flask.g.db_con, data['login_id'])
             kwargs['login_types'] = data['login_types']
-            print("AT DECODE:", kwargs['login_id'], kwargs['login_types'])
 
         except jwt.ExpiredSignatureError:
             return flask.jsonify({'status': STATUS_CODES['api_error'], 'errors': "Expired authorization token"})
@@ -62,9 +61,9 @@ def endpoint_error_handler(func):
         except ValueError as e:
             logger.error(f"Error: {e}")
             response = {'status': STATUS_CODES['api_error'], 'errors': str(e)}
-            return response
+            return flask.jsonify(response)
         except (Exception, DatabaseError) as e:
             logger.exception(f"Error: {e}")
             response = {'status': STATUS_CODES['internal_error'],'errors': str(e)}
-            return response
+            return flask.jsonify(response)
     return wrapper
