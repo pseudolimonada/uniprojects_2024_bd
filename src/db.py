@@ -610,6 +610,9 @@ def execute_payment(db_con, login_id, bill_id, payload, cursor=None):
 
 @transactional
 def get_top3_patients(db_con, cursor=None):
+    now = datetime.datetime.now()
+    start_date = now.replace(day=1).date()
+    end_date = datetime.date(now.year, now.month, calendar.monthrange(now.year, now.month)[1])
     query = """
     WITH procedures AS (
         SELECT 
@@ -620,7 +623,7 @@ def get_top3_patients(db_con, cursor=None):
             e.patient_person_id AS patient_id
         FROM appointment a
         JOIN event e ON a.event_id = e.id
-        WHERE e.start_date >= DATE_TRUNC('month', NOW()) AND e.end_date < DATE_TRUNC('month', NOW() + INTERVAL '1 month')
+        WHERE e.start_date >= %s AND e.end_date <= %s
 
         UNION ALL
 
@@ -632,7 +635,7 @@ def get_top3_patients(db_con, cursor=None):
             esub.patient_person_id AS patient_id
         FROM surgery s 
         JOIN event esub ON s.hospitalization_event_id = esub.id
-        WHERE s.start_date >= DATE_TRUNC('month', NOW()) AND s.end_date < DATE_TRUNC('month', NOW() + INTERVAL '1 month')
+        WHERE s.start_date >= %s AND s.end_date <= %s
     )
     SELECT 
         p.name AS patient_name,
@@ -648,8 +651,8 @@ def get_top3_patients(db_con, cursor=None):
     ORDER BY total_spent DESC
     LIMIT 3;  
     """
-   
-    cursor.execute(query)
+    values = (start_date, end_date, start_date, end_date)
+    cursor.execute(query, values)
     patients = cursor.fetchall()
 
     if patients is None:
@@ -672,11 +675,11 @@ def get_daily_summary(db_con, date, cursor=None):
     
     FROM hospitalization h 
     JOIN event e ON h.event_id = e.id 
-    JOIN surgery s ON s.hospitalization_event_id = e.id AND DATE(s.start_date) = DATE(%s)
+    JOIN surgery s ON s.hospitalization_event_id = e.id AND DATE(s.start_date) = %s
     JOIN prescription p ON p.event_id = e.id
     JOIN bill b ON b.event_id = e.id
     JOIN payment ON payment.bill_id = b.id
-    WHERE DATE(e.start_date) <= DATE(%s) AND DATE(e.end_date) >= DATE(%s);
+    WHERE DATE(e.start_date) <= %s AND DATE(e.end_date) >= %s;
     """
 
     cursor.execute(query, (date, date, date))
@@ -695,25 +698,21 @@ def get_daily_summary(db_con, date, cursor=None):
 
 @transactional
 def generate_monthly_report(db_con, cursor=None):
+    now = datetime.datetime.now()
+    twelve_months_ago = now.replace(year= now.year - 1, day=1).date()
+    end_of_this_month = datetime.date(now.year, now.month, calendar.monthrange(now.year, now.month)[1])
     query = """
     WITH
     SurgeryCounts AS (
         SELECT
             s.doctor_employee_person_id,
             DATE_TRUNC('month', s.start_date) AS surgery_month,
-            COUNT(*) AS surgery_count
+            COUNT(*) AS surgery_count,
+            ROW_NUMBER() OVER(PARTITION BY DATE_TRUNC('month', s.start_date) ORDER BY COUNT(*) DESC) as rn
         FROM surgery s
-        WHERE s.start_date >= DATE_TRUNC('month', NOW()) - INTERVAL '12 months'
+        WHERE DATE(s.start_date) >= %s AND DATE(s.start_date) <= %s
         GROUP BY
             s.doctor_employee_person_id,
-            surgery_month
-    ),
-    MaxSurgeryCounts AS (
-        SELECT
-            surgery_month,
-            MAX(surgery_count) AS max_surgery_count
-        FROM SurgeryCounts
-        GROUP BY
             surgery_month
     )
     SELECT
@@ -722,17 +721,15 @@ def generate_monthly_report(db_con, cursor=None):
         sc.surgery_count
     
     FROM SurgeryCounts sc
-    JOIN MaxSurgeryCounts msc
-    ON sc.surgery_month = msc.surgery_month
-    AND sc.surgery_count = msc.max_surgery_count
     JOIN doctor d ON sc.doctor_employee_person_id = d.employee_person_id
     JOIN employee e ON d.employee_person_id = e.person_id
     JOIN person p ON e.person_id = p.id
+    WHERE sc.rn = 1
     
     ORDER BY sc.surgery_month;
     """
 
-    cursor.execute(query)
+    cursor.execute(query, (twelve_months_ago, end_of_this_month))
     top12 = cursor.fetchall()
 
     if top12 is None:
