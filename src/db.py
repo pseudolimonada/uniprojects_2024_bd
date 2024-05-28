@@ -113,6 +113,9 @@ def register_user(db_con, user_type, payload, cursor=None) -> int:
     hashed_password = hashlib.sha256(payload['password'].encode()).hexdigest()
     payload['password'] = hashed_password
 
+    #locks tables for multiple insertions
+    cursor.execute("LOCK TABLE person IN EXCLUSIVE MODE")
+
     query = _build_insert_query('person', person_field_list, fetch='id')
     values = tuple([payload[field] for field in person_field_list])
 
@@ -128,9 +131,12 @@ def register_user(db_con, user_type, payload, cursor=None) -> int:
 
     if user_type == 'patient':
         logger.info('Registering patient')
+        cursor.execute("LOCK TABLE employee IN EXCLUSIVE MODE")
+
         _register_patient(user_id, payload, cursor=cursor)
     else:
         logger.info('Registering employee')
+        cursor.execute("LOCK TABLE patient IN EXCLUSIVE MODE")
         _register_employee(user_type, user_id, payload, cursor=cursor)
 
     return {
@@ -151,10 +157,13 @@ def _register_employee(user_type, user_id, payload, cursor=None):
     cursor.execute(query, values)
 
     if user_type == 'doctor':
+        cursor.execute("LOCK TABLE doctor IN EXCLUSIVE MODE")
         _register_doctor(user_id, payload, cursor=cursor)
     elif user_type == 'nurse':
+        cursor.execute("LOCK TABLE nurse IN EXCLUSIVE MODE")
         _register_nurse(user_id, payload, cursor=cursor)
     elif user_type == 'assistant':
+        cursor.execute("LOCK TABLE assistant IN EXCLUSIVE MODE")
         _register_assistant(user_id, payload,cursor=cursor)
 
 def _register_doctor(user_id, payload, cursor=None):
@@ -647,7 +656,7 @@ def execute_payment(db_con, login_id, bill_id, payload, cursor=None):
 def get_top3_patients(db_con, cursor=None):
     now = datetime.datetime.now()
     start_date = now.replace(day=1).date()
-    end_date = datetime.date(now.year, now.month, calendar.monthrange(now.year, now.month)[1])
+    end_date = datetime.date(now.year, now.month, calendar.monthrange(now.year, now.month)[1]) + datetime.timedelta(days=1)
     query = """
     WITH procedures AS (
         SELECT 
@@ -658,7 +667,7 @@ def get_top3_patients(db_con, cursor=None):
             e.patient_person_id AS patient_id
         FROM appointment a
         JOIN event e ON a.event_id = e.id
-        WHERE e.start_date >= %s AND e.end_date <= %s
+        WHERE e.start_date >= %s AND e.end_date < %s
 
         UNION ALL
 
@@ -670,7 +679,7 @@ def get_top3_patients(db_con, cursor=None):
             esub.patient_person_id AS patient_id
         FROM surgery s 
         JOIN event esub ON s.hospitalization_event_id = esub.id
-        WHERE s.start_date >= %s AND s.end_date <= %s
+        WHERE s.start_date >= %s AND s.end_date < %s
     )
     SELECT 
         p.name AS patient_name,
@@ -680,7 +689,7 @@ def get_top3_patients(db_con, cursor=None):
     JOIN person p ON pt.person_id = p.id
     JOIN event e ON e.patient_person_id = pt.person_id
     JOIN bill b ON b.event_id = e.id
-    JOIN payment ON payment.bill_id = b.id
+    LEFT JOIN payment ON payment.bill_id = b.id
     JOIN procedures ON procedures.patient_id = pt.person_id
     GROUP BY p.id
     ORDER BY total_spent DESC
@@ -718,15 +727,9 @@ def get_daily_summary(db_con, date, cursor=None):
     FROM hospitalization h 
     JOIN event e ON h.event_id = e.id 
     JOIN bill b ON b.event_id = e.id
-    JOIN payment ON payment.bill_id = b.id
+    LEFT JOIN payment ON payment.bill_id = b.id
     WHERE e.start_date >= %s AND e.start_date < %s;
     """
-
-    #considering this query's requirements and the prolonged nature of hospitalizations,
-    # it might have made sense to add a created_at column to payment/prescription like:
-    # ALTER TABLE prescriptions
-    # ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-
 
     cursor.execute(query, (date, date_plus_one, date, date_plus_one,date, date_plus_one))
     summary = cursor.fetchone()

@@ -149,7 +149,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\"username\": \"Dr.watson3\",\n\"password\": \"securepassword123\",\n\"name\": \"Housewhatshisname\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Internal Medicine\"\n}",
+					"raw": "{\n\"username\": \"Dr.watson4\",\n\"password\": \"securepassword123\",\n\"name\": \"John Mulley\",\n\"address\": \"123 Main St, City, Country\",\n\"cc_number\": \"1111 1111 1111 1121\",\n\"nif_number\": \"111111121\",\n\"birth_date\": \"1985-07-15\",\n\"contract_details\": \"Full-time employment contract\",\n\"license\": \"Professional license XYZ\",\n\"specialization_name\": \"Internal Medicine\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -167,7 +167,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"username\": \"nursemimi4\",\n  \"password\": \"verysecurepassword\",\n  \"name\": \"Betty Nurse\",\n  \"address\": \"654 Maple St, Thiscity, USA\",\n  \"cc_number\": \"4111111111111115\",\n  \"nif_number\": 675849302,\n  \"birth_date\": \"1985-05-05\",\n  \"contract_details\": \"Part-time, started on 2018-09-10.\"\n}",
+					"raw": "{\n  \"username\": \"nursebetty\",\n  \"password\": \"verysecurepassword\",\n  \"name\": \"Betty Lastname\",\n  \"address\": \"654 Maple St, Thiscity, USA\",\n  \"cc_number\": \"4111111111111115\",\n  \"nif_number\": 675849302,\n  \"birth_date\": \"1985-05-05\",\n  \"contract_details\": \"Part-time, started on 2018-09-10.\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -185,7 +185,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"username\": \"janedoe4\",\n  \"password\": \"anothersecurepassword\",\n  \"name\": \"Jane Doe\",\n  \"address\": \"456 Elm St, Othertown, USA\",\n  \"cc_number\": \"4111111111111112\",\n  \"nif_number\": 987654321,\n  \"birth_date\": \"1990-02-02\",\n  \"medical_history\": \"No known allergies. Previous surgery in 2010.\"\n}",
+					"raw": "{\n  \"username\": \"janedoe5\",\n  \"password\": \"anothersecurepassword\",\n  \"name\": \"Jane Doe\",\n  \"address\": \"456 Elm St, Othertown, USA\",\n  \"cc_number\": \"4111111111111112\",\n  \"nif_number\": 987654321,\n  \"birth_date\": \"1990-02-02\",\n  \"medical_history\": \"No known allergies. Previous surgery in 2010.\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -346,7 +346,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"patient_id\": 8,\n    \"doctor_id\": 6,\n    \"nurses\": [\n        [\"10\", \"special role\"]\n    ],\n    \"date\": \"2024-05-28 8h\"\n}",
+					"raw": "{\n    \"patient_id\": 8,\n    \"doctor_id\": 6,\n    \"nurses\": [\n        [\"10\", \"special role\"]\n    ],\n    \"date\": \"2024-06-1 16h\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -407,7 +407,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"type\": \"appointment\",\n    \"event_id\": \"2\",\n    \"validity\": \"2024-05-30\",\n    \"medicines\": [\n        {\n            \"medicine\": \"Aspirin\",\n            \"posology_dose\": \"2 500mg pills\",\n            \"posology_frequency\": \"3 times a week\"\n        },\n        {\n            \"medicine\": \"Ibuprofen\",\n            \"posology_dose\": \"1 400mg pill\",\n            \"posology_frequency\": \"every 6 hours\"\n        },\n        {\n            \"medicine\": \"Acetaminophen\",\n            \"posology_dose\": \"1 500mg pill\",\n            \"posology_frequency\": \"every 4-6 hours as needed\"\n        }\n    ]\n}",
+					"raw": "{\n    \"type\": \"hospitalization\",\n    \"event_id\": \"6\",\n    \"validity\": \"2024-05-30\",\n    \"medicines\": [\n        {\n            \"medicine\": \"Aspirin\",\n            \"posology_dose\": \"2 500mg pills\",\n            \"posology_frequency\": \"3 times a week\"\n        },\n        {\n            \"medicine\": \"Ibuprofen\",\n            \"posology_dose\": \"1 400mg pill\",\n            \"posology_frequency\": \"every 6 hours\"\n        },\n        {\n            \"medicine\": \"Acetaminophen\",\n            \"posology_dose\": \"1 500mg pill\",\n            \"posology_frequency\": \"every 4-6 hours as needed\"\n        }\n    ]\n}",
 					"options": {
 						"raw": {
 							"language": "json"

@@ -2,6 +2,7 @@
 All the documentation and source code for BD 2024 project LifeLink
 Report link: https://www.overleaf.com/project/65f8cce4799e65445ec51df1
 
+Follow the next steps to setup the DB.
 
 # Create and setup DB
 How: open PSQL and run these commands
@@ -11,8 +12,11 @@ psql -h localhost -U postgres
 DROP DATABASE dbproj WITH(FORCE);
 CREATE DATABASE dbproj;
 CREATE USER dbproj PASSWORD "1234";
-(run schema script from onda)
+```
 
+Run the schema script from onda in PGadmin, then execute these commands
+
+```
 psql -h localhost -U postgres -d dbproj;
 GRANT ALL ON SCHEMA public to dbproj;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO dbproj;
