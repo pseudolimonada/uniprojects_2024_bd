@@ -666,26 +666,35 @@ def get_top3_patients(db_con, cursor=None):
 
 @transactional
 def get_daily_summary(db_con, date, cursor=None):
+    date = get_dateobj_from_date(date)
+    date_plus_one = date + datetime.timedelta(days=1)
     query = """
     SELECT
         COUNT(DISTINCT e.id) AS hospitalizations,
-        COUNT(DISTINCT s.id) AS surgeries,
+        (SELECT COUNT(DISTINCT s.id) 
+            FROM surgery s 
+            WHERE s.start_date >= %s AND s.start_date < %s) AS surgeries,
         COUNT(DISTINCT p.id) AS prescriptions,
         COALESCE(SUM(payment.amount), 0) AS total_revenue
     
     FROM hospitalization h 
     JOIN event e ON h.event_id = e.id 
-    JOIN surgery s ON s.hospitalization_event_id = e.id AND DATE(s.start_date) = %s
     JOIN prescription p ON p.event_id = e.id
     JOIN bill b ON b.event_id = e.id
     JOIN payment ON payment.bill_id = b.id
-    WHERE DATE(e.start_date) <= %s AND DATE(e.end_date) >= %s;
+    WHERE e.start_date >= %s AND e.start_date < %s;
     """
 
-    cursor.execute(query, (date, date, date))
+    #considering this query's requirements and the prolonged nature of hospitalizations,
+    # it might make sense to add a created_at column to payment/prescription like:
+    # ALTER TABLE prescriptions
+    # ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+
+    cursor.execute(query, (date, date_plus_one, date, date_plus_one))
     summary = cursor.fetchone()
 
-    if summary is None:
+    if summary is None or summary[0] == 0:
         raise ValueError("No data found for this date")
     
     return {
@@ -710,7 +719,7 @@ def generate_monthly_report(db_con, cursor=None):
             COUNT(*) AS surgery_count,
             ROW_NUMBER() OVER(PARTITION BY DATE_TRUNC('month', s.start_date) ORDER BY COUNT(*) DESC) as rn
         FROM surgery s
-        WHERE DATE(s.start_date) >= %s AND DATE(s.start_date) <= %s
+        WHERE s.start_date >= %s AND s.start_date <= %s
         GROUP BY
             s.doctor_employee_person_id,
             surgery_month
