@@ -1,34 +1,13 @@
 # BD Project
 All the documentation and source code for BD 2024 project LifeLink
-
-
 Report link: https://www.overleaf.com/project/65f8cce4799e65445ec51df1
 
 
-
-# EDGECASES
-- Se um employee fosse um patient, o sistema não está preparado (ou será que está?) e teria de criar uma nova person entity com repetição de dados unicos (cartao cidadao, etc). 
-
-
-
-# QUESTOES:
-> permissões nao são representadas no diagrama, nem têm qualquer variavel (será que o authenticator consegue destingir sem variavel do tipo "person_type"?)
-> é suposto fazermos sempre primary key artificial ou por exemplo side effects é nome+severidade?
-> na modulação dos medicamentos assumimos um medicamento_type e medicamento_prescribed para não estar sempre a repetir o nome do medicamento ou?
-> nas transações, é suposto fazer uma por cada feature a implementar certo? ou dividimos pelos principios de atomizar?
-> para a app, é suposto usar python e http normal ou podemos usar coisas tipo o flask para simplificar o routing?
-
-
-
-
-# PERMISSOES A IMPLEMENTAR
-- só o assistant gere tudo o que é appointment surgery e hospitalization
-
-
-
-# Instalar/Reinstalar a DB
+# Create and setup DB
+How: open PSQL and run these commands
 
 ```
+psql -h localhost -U postgres
 DROP DATABASE dbproj WITH(FORCE);
 CREATE DATABASE dbproj;
 CREATE USER dbproj PASSWORD "1234";
@@ -40,8 +19,20 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO dbproj;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO dbproj;
 ```
 
+# Create indexes in DB
+How: open PGAdmin and run this script in the query tool
 
-# Inserir especializações na DB
+```
+CREATE INDEX idx_medication_id ON medication(id);
+CREATE INDEX idx_medication_name ON medication(name);
+
+CREATE INDEX idx_nurse_employee_person_id ON nurse(employee_person_id);
+CREATE INDEX idx_doctor_employee_person_id ON doctor(employee_person_id);
+CREATE INDEX idx_assistant_employee_person_id ON assistant(employee_person_id);
+```
+
+# Populate tables in DB
+How: open PGAdmin and run this script in the query tool
 
 ```
 INSERT INTO specialization (name)
@@ -98,10 +89,9 @@ VALUES
     (3, 6, 2);  -- Lisinopril causing Headache with severity level 3
 ```
 
-# TRIGGERS
 
-# Adicionar um trigger à DB
-Abrir o PgAdmin e correr o script na query tool
+# Add triggers to DB
+How: open PGAdmin and run this script in the query tool
 
 ```
 -- Trigger for appointments

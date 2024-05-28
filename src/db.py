@@ -308,10 +308,45 @@ def _check_patient(patient_id, start_date, end_date, cursor=None):
         FROM event e
         JOIN surgery s ON e.id = s.hospitalization_event_id
         WHERE s.start_date < %s AND s.end_date > %s
+
+        UNION ALL
+
+        SELECT DISTINCT a.doctor_employee_person_id
+        FROM appointment a
+        JOIN event e ON a.event_id = e.id
+        WHERE e.start_date < %s AND e.end_date > %s
+
+        UNION ALL
+
+        SELECT DISTINCT s.doctor_employee_person_id
+        FROM surgery s
+        WHERE s.start_date < %s AND s.end_date > %s
+
+        UNION ALL
+
+        SELECT DISTINCT ns.nurse_employee_person_id
+        FROM nurse_surgery ns
+        JOIN surgery s ON ns.surgery_id = s.id
+        WHERE s.start_date < %s AND s.end_date > %s
+
+        UNION ALL
+
+        SELECT DISTINCT na.nurse_employee_person_id
+        FROM nurse_appointment na
+        JOIN appointment a ON na.appointment_event_id = a.event_id
+        JOIN event e ON a.event_id = e.id
+        WHERE e.start_date < %s AND e.end_date > %s
+
+        UNION ALL
+
+        SELECT DISTINCT h.nurse_employee_person_id
+        FROM hospitalization h
+        JOIN event e ON h.event_id = e.id
+        WHERE e.start_date < %s AND e.end_date > %s
     )
     LIMIT 1;
     """
-    values = (patient_id, end_date, start_date, end_date, start_date)
+    values = (patient_id, end_date, start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, start_date, end_date, start_date)
     cursor.execute(query, values)
     patient = cursor.fetchone()
 
