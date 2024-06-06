@@ -608,6 +608,12 @@ def _check_bill(login_id, bill_id, cursor=None):
     
     return bill[0]
 
+def _set_bill_status(bill_id, status, cursor=None):
+    cursor.execute(
+        "UPDATE bill SET status = %s WHERE id = %s",
+        (status, bill_id)
+    )
+
 def _pay_amount(bill_id, payment_amount, payment_method, cursor=None):
     cursor.execute(
         "INSERT INTO payment (bill_id, amount, method) VALUES (%s, %s, %s) RETURNING id",
@@ -645,12 +651,15 @@ def execute_payment(db_con, login_id, bill_id, payload, cursor=None):
     bill_status = _check_bill(login_id, bill_id, cursor=cursor)
     current_amount = _pay_amount(bill_id, payment_amount, payment_method, cursor=cursor)
 
-    if current_amount == 0:
-        return f"Bill paid successfully."
-    elif current_amount < 0:
-        return f"Bill overpaid. Credited {-current_amount} euro."
-    else:
+    if current_amount > 0:
         return f"Bill partially paid. Remaining amount: {current_amount} euro."
+    else:
+        _set_bill_status(bill_id, 'paid', cursor=cursor)
+        if current_amount < 0:
+            return f"Bill overpaid. Credited {-current_amount} euro."
+        else:
+            return f"Bill paid successfully."
+            
 
 @transactional
 def get_top3_patients(db_con, cursor=None):
