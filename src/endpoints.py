@@ -136,7 +136,7 @@ def get_appointments(patient_user_id, login_id=None, login_types=None):
     appointment1_id, “doctor_id”: doctor_user_id, “date”: date}, ... (if it succeeds)]}
     """
     #endpoint validation logic
-    if 'patient' in login_types and str(login_id) != patient_user_id and 'assistant' not in login_types:
+    if 'patient' in login_types and login_id != patient_user_id and 'assistant' not in login_types:
         print("AT GET APPOINTMENTS:", login_id, patient_user_id, login_id != patient_user_id)
         response = {'status': STATUS_CODES['api_error'], 'results': 'Patient credentials don\'t match patient id'}
         return flask.jsonify(response) 
@@ -193,7 +193,7 @@ def schedule_surgery(hospitalization_id=None, login_id=None, login_types=None):
 
 
 
-@app.route('/dbproj/prescriptions/<patient_user_id>', methods=['GET'])
+@app.route('/dbproj/prescriptions/<int:patient_user_id>', methods=['GET'])
 @token_required
 @endpoint_error_handler
 def get_prescriptions(patient_user_id, login_id=None, login_types=None):
@@ -205,7 +205,7 @@ def get_prescriptions(patient_user_id, login_id=None, login_types=None):
     presciption_id, “validity”: date “posology”: ["dose”: value, frequency”: frequency, “medicine”: medicine_name]}, {...}] (if it succeeds)}
     """
     #endpoint validation logic
-    if 'patient' in login_types and len(login_types) == 1 and str(login_id) != patient_user_id:
+    if 'patient' in login_types and len(login_types) == 1 and login_id != patient_user_id:
         response = {'status': STATUS_CODES['api_error'], 'results': 'Patient credentials don\'t match patient id'}
         return flask.jsonify(response)
     
